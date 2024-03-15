@@ -7,12 +7,20 @@ import torch.nn as nn
 import wandb
 from loguru import logger
 
-from models import alexnet, fc_mnist, vgg, fc_cifar, lenet
+from models import alexnet, fc_mnist, vgg, fc_cifar, lenet, vit
+from models.build_model import create_model
+
+from models.vit import VisionTransformer
+from functools import partial
+
 from models.vgg import vgg as make_vgg
 from topology import fast_ripser
 from utils import accuracy
 from PHDim.dataset import get_data_simple
 from PHDim.eval import eval, recover_eval_tensors, eval_on_tensors
+
+from .utils.losses import LabelSmoothingCrossEntropy
+
 
 
 class UnknownWeightFormatError(BaseException):
@@ -34,9 +42,11 @@ def main(iterations: int = 10000000,
          batch_size_eval: int = 1000,
          lr: float = 1.e-1,
          eval_freq: int = 1000,
-         dataset: str = "mnist",
+         # dataset: str = "mnist",
+         dataset: str = "cifar10",
          data_path: str = "~/data/",
-         model: str = "fc",
+         # model: str = "fc",
+         model: str = "vit",
          save_folder: str = "results",
          depth: int = 5,
          width: int = 50,
@@ -45,7 +55,8 @@ def main(iterations: int = 10000000,
          seed: int = 42,
          save_weights_file: str = None,
          compute_dimensions: bool = True,
-         weight_file: str = None,
+         # weight_file: str = None,
+         weight_file: str = './model_weights/vit/vit_cifar10_patch4_input32.pth',
          ripser_points: int = 1000,
          jump: int = 20,
          additional_dimensions: bool = False,
@@ -75,7 +86,7 @@ def main(iterations: int = 10000000,
     SCALE = 64
 
     # TODO: use the args here
-    if model not in ["fc", "alexnet", "vgg", "lenet"]:
+    if model not in ["fc", "alexnet", "vgg", "lenet", "vit"]:
         raise NotImplementedError(f"Model {model} not implemented, should be in ['fc', 'alexnet', 'vgg']")
     if model == 'fc':
         if dataset == 'mnist':
@@ -95,7 +106,28 @@ def main(iterations: int = 10000000,
             net = lenet(input_channels=1, height=28, width=28).to(device)
         else:
             net = lenet().to(device)
+    elif model == "vit":
+        if dataset == 'cifar10':
 
+            # Specific parameters for vit and Cifar10 -- to be added to args
+            n_classes = 10
+            img_size = 32
+            # default values, this can be done in a better way
+            vit_mlp_ratio = 2 # MLP layers in the transformer encoder'
+            sd = 0.1 #rate of stochastic depth
+            # model = create_model(img_size, n_classes)
+            patch_size = 4 if img_size == 32 else 8  # 4 if img_size = 32 else 8: patch size for ViT
+            net = VisionTransformer(img_size=[img_size],
+                                      patch_size=patch_size,
+                                      in_chans=3,
+                                      num_classes=n_classes,
+                                      embed_dim=192,
+                                      depth=9,
+                                      num_heads=12,
+                                      mlp_ratio=vit_mlp_ratio,
+                                      qkv_bias=True,
+                                      drop_path_rate=sd,
+                                      norm_layer=partial(nn.LayerNorm, eps=1e-6)).to(device)
     logger.info("Network: ")
     print(net)
 
@@ -113,6 +145,9 @@ def main(iterations: int = 10000000,
 
     crit = nn.CrossEntropyLoss().to(device)
     crit_unreduced = nn.CrossEntropyLoss(reduction="none").to(device)
+
+    if model == 'vit':
+        crit = LabelSmoothingCrossEntropy()
 
     def cycle_loader(dataloader):
         while 1:
@@ -150,6 +185,7 @@ def main(iterations: int = 10000000,
 
     logger.info("Starting training")
     for i, (x, y) in enumerate(circ_train_loader):
+        print('We are at iteration', i)
 
         # Sequentially running evaluation step
         # first record is at the initial point
@@ -316,3 +352,6 @@ def main(iterations: int = 10000000,
             exp_dict["saved_weights"] = str(save_weights_file)
 
     return exp_dict
+
+if __name__ == '__main__':
+    main()
