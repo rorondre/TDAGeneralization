@@ -1,5 +1,7 @@
 from collections import deque
 from pathlib import Path
+import os
+import datetime
 
 import numpy as np
 import torch
@@ -15,12 +17,14 @@ from functools import partial
 
 from models.vgg import vgg as make_vgg
 from topology import fast_ripser
-from utils import accuracy
+from utils import accuracy, LabelSmoothingCrossEntropy
 from PHDim.dataset import get_data_simple
 from PHDim.eval import eval, recover_eval_tensors, eval_on_tensors
 
-from .utils.losses import LabelSmoothingCrossEntropy
+from sklearn.metrics.pairwise import pairwise_distances
 
+# from utils import LabelSmoothingCrossEntropy
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:21"
 
 
 class UnknownWeightFormatError(BaseException):
@@ -37,9 +41,16 @@ def get_weights(net):
         return torch.cat(w).cpu().numpy()
 
 
-def main(iterations: int = 10000000,
+def main(
+        iterations: int = 10000000,
+        #  iterations: int = 3001,
          batch_size_train: int = 100,
-         batch_size_eval: int = 1000,
+         batch_size_eval: int = 100,
+         # batch_size_train: int = 100,
+         # batch_size_eval: int = 100,
+         # batch_size_train: int = 32,
+         # batch_size_eval: int = 32,
+
          lr: float = 1.e-1,
          eval_freq: int = 1000,
          # dataset: str = "mnist",
@@ -51,13 +62,23 @@ def main(iterations: int = 10000000,
          depth: int = 5,
          width: int = 50,
          optim: str = "SGD",
+         # loss_function: str = "",
          min_points: int = 200,
          seed: int = 42,
          save_weights_file: str = None,
          compute_dimensions: bool = True,
          # weight_file: str = None,
-         weight_file: str = './model_weights/vit/vit_cifar10_patch4_input32.pth',
-         ripser_points: int = 1000,
+         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/model_weights/vit_cifar10/vit_cifar10_patch4_input32.pth',
+         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights_with_pretraining.pth',
+         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights.pth',
+         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights_with_pretraining_small_test_3000_it.pth',
+
+         # Training accuracy of 100 produced with the following weights, after 76000 epochs
+         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged.pth',
+
+         weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged_final_more_than_3000_really_final.pth',
+
+         ripser_points: int = 10,
          jump: int = 20,
          additional_dimensions: bool = False,
          data_proportion: float = 1.):
@@ -66,9 +87,20 @@ def main(iterations: int = 10000000,
     save_folder = Path(save_folder)
     assert save_folder.exists(), str(save_folder)
 
+    # TODO: make it work with this folder
+    # exp_folder = save_folder / str(datetime.datetime.now()).replace(" ", "_").replace(":", "_")
+    # exp_folder.mkdir(parents=True, exist_ok=True)
+
+    model_name = model
+    model_name += f"-{model}-{dataset}"
+    save_path = os.path.join(os.getcwd(), 'save_finetuned', model_name)
+    if save_path:
+        os.makedirs(save_path, exist_ok=True)
+
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     logger.info(f"on device {str(device)}")
     logger.info(f"Random seed ('torch.manual_seed'): {seed}")
+    print('The seed is,', seed)
     torch.manual_seed(seed)
 
     # training setup
@@ -130,24 +162,64 @@ def main(iterations: int = 10000000,
                                       norm_layer=partial(nn.LayerNorm, eps=1e-6)).to(device)
     logger.info("Network: ")
     print(net)
+    n_parameters = sum(p.numel() for p in net.parameters() if p.requires_grad)
+    logger.info("Number of params: ")
+    print(n_parameters)
 
     if weight_file is not None:
         logger.info(f"Loading weights from {str(weight_file)}")
-
         if Path(weight_file).suffix == ".pth":
-            net.load_state_dict(torch.load(str(weight_file)))
+            print('we want to be here!')
+            model_dict = net.state_dict()
+            # print("loading pretrained weights . . .")
+            state_dict = torch.load(weight_file, map_location="cpu")
+            model_state_dict = state_dict['model_state_dict']
+            for key, value in state_dict.items():
+                print('The keys are')
+                print(key, value)
+            # checkpoint_key = 'student'
+            # if checkpoint_key is not None and checkpoint_key in state_dict:
+            #     print(f"Take key {checkpoint_key} in provided checkpoint dict")
+            #     state_dict = state_dict[checkpoint_key]
+            # # remove `module.` prefix
+            # state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+            # # remove `backbone.` prefix induced by multicrop wrapper
+            # state_dict = {k.replace("backbone.", ""): v for k, v in state_dict.items()}
+            # state_dict = {k: v if v.size() == model_dict[k].size() else model_dict[k] for k, v in
+            #               zip(model_dict.keys(), state_dict.values())}
+            # # model.load_state_dict(state_dict, strict=False)
+            # net.load_state_dict(state_dict, strict=False)
+            # net.load_state_dict(torch.load(str(weight_file)))
+            net.load_state_dict(state_dict['model_state_dict'])
         elif Path(weight_file).suffix == ".pyT":
             net = torch.load(str(weight_file))
         else:
             raise UnknownWeightFormatError(f"Extension {Path(weight_file).suffix} unknown")
 
     net = net.to(device)
+    crit = nn.CrossEntropyLoss(weight=None, size_average=None,
+                               ignore_index=- 100, reduce=None,
+                               reduction='mean', label_smoothing=0.1).to(device)
+    crit_unreduced = nn.CrossEntropyLoss(weight=None, size_average=None,
+                                         ignore_index=- 100, reduce=None,
+                                         reduction='none', label_smoothing=0.1).to(device)
 
-    crit = nn.CrossEntropyLoss().to(device)
-    crit_unreduced = nn.CrossEntropyLoss(reduction="none").to(device)
-
+    # Try to get the LabelSmoothingCrossEntropy to work
     if model == 'vit':
-        crit = LabelSmoothingCrossEntropy()
+        print('we are here')
+        print('Adding special loss')
+        # crit = LabelSmoothingCrossEntropy()
+        crit = nn.CrossEntropyLoss(weight=None, size_average=None,
+                          ignore_index=- 100, reduce=None,
+                          reduction='mean', label_smoothing=0.1).to(device)
+        crit_unreduced = nn.CrossEntropyLoss(weight=None, size_average=None,
+                          ignore_index=- 100, reduce=None,
+                          reduction='none', label_smoothing=0.1).to(device)
+
+    # crit = nn.CrossEntropyLoss().to(device)
+    # crit_unreduced = nn.CrossEntropyLoss(reduction="none").to(device)
+
+
 
     def cycle_loader(dataloader):
         while 1:
@@ -171,7 +243,7 @@ def main(iterations: int = 10000000,
     exp_dict = {}
 
     # weights
-    weights_history = deque([])
+    # weights_history = deque([])
     loss_history = deque([])
 
     STOP = False  # Do we have enough point for persistent homology
@@ -190,7 +262,7 @@ def main(iterations: int = 10000000,
         # Sequentially running evaluation step
         # first record is at the initial point
         if i % eval_freq == 0 and (not CONVERGED):
-
+            net.eval()
             # Evaluation on validation set
             logger.info(f"Evaluation at iteration {i}")
             te_hist, *_ = eval(test_loader_eval, net, crit_unreduced, opt)
@@ -239,29 +311,66 @@ def main(iterations: int = 10000000,
                 STOP=True
 
         if CONVERGED:
-            weights_history.append(get_weights(net))
+            # we are reaching here
+            print('We have converged!!!')
+            net.eval()
+            # we need to save the weights we have converged to so that it is easy to finetune
+            checkpoint_name = 'checkpoint_trial'
+            # add the training and test accuracy value at the checkpoint
+            # checkpoint_name += f"-{round(tr_hist[1], 3)}-{round(te_hist[1], 3)}"
+            # weights_path = save_folder / "converged_weights.npy"
+            #TODO: get the saving to work with the exp_folder path
+            # weights_path = exp_folder / "converged_weights.pth"
+            # print('dm_path', weights_path)
+            # logger.info(f"Print path to saved weights", weights_path)
+            torch.save({
+                'model_state_dict': net.state_dict(),
+                'epoch': iterations,
+                # 'optimizer_state_dict': optimizer.state_dict(),
+                # 'scheduler': scheduler.state_dict(),
+            },
+                os.path.join(save_path, 'checkpoint_trial_further.pth')
+                # weights_path
+            )
+
+            # weights_history.append(get_weights(net))
+
+            # It might be a good idea to save the weights at this point
+            # Saving weights if specified
+            if save_weights_file is not None:
+                logger.info(f"Saving last weights in {str(save_weights_file)}")
+                torch.save(net.state_dict(), str(save_weights_file))
+                exp_dict["saved_weights"] = str(save_weights_file)
 
             if compute_dimensions:
-                tr_hist, losses, _ = eval_on_tensors(eval_x, eval_y, net, crit_unreduced)
+                # it fails at this line:
+                # clear cache
+                torch.cuda.empty_cache()
+                proportion_eval = 500
+                proportion_eval_x = eval_x[:500,...]
+                proportion_eval_y = eval_y[:500,...]
+
+                #tr_hist, losses, _ = eval_on_tensors(proportion_eval_x, proportion_eval_y, net, crit_unreduced)
+                tr_hist, losses, _ = eval(train_loader_eval, net, crit_unreduced, opt)
                 evaluation_history_TRAIN.append([i, *tr_hist])
                 loss_history.append(losses.cpu())
 
             # Validation history
-            te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
-
+            #te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
+            te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
         # clear cache
         torch.cuda.empty_cache()
 
-        if (len(weights_history) >= ripser_points) and compute_dimensions:
+        if (len(loss_history) >= ripser_points) and compute_dimensions:
             STOP = True
-            weights_history.popleft()
+            # weights_history.popleft()
             loss_history.popleft()
 
         # final evaluation and saving results
         if STOP and CONVERGED:
 
             # if no convergence, we don't record
-            if len(weights_history) < ripser_points - 1:
+            if len(loss_history) < ripser_points - 1:
                 logger.warning("Experiment did not converge")
                 break
 
@@ -274,9 +383,9 @@ def main(iterations: int = 10000000,
             evaluation_history_TRAIN.append([i + 1, *tr_hist])
 
             # Turn collected iterates (both weights and losses) into numpy arrays
-            if compute_dimensions:
-                weights_history_np = np.stack(tuple(weights_history))
-                del weights_history
+            # if compute_dimensions:
+            #     weights_history_np = np.stack(tuple(weights_history))
+            #     del weights_history
 
             loss_history_np = torch.stack(tuple(loss_history)).cpu().numpy()
 
@@ -285,48 +394,70 @@ def main(iterations: int = 10000000,
             jump_size = int((ripser_points - min_points) / jump)
 
             subset_dim_dict = {}
-            if compute_dimensions:
+            # if compute_dimensions:
+            #
+            #     logger.info("Computing euclidean PH dim...")
+            #     ph_dim_euclidean = fast_ripser(weights_history_np,
+            #                                    max_points=ripser_points,
+            #                                    min_points=min_points,
+            #                                    point_jump=jump_size)
+            #
+            #     logger.info("Computing L1 losses based PH dim...")
+            #     ph_dim_losses_based = fast_ripser(loss_history_np,
+            #                                       max_points=ripser_points,
+            #                                       min_points=min_points,
+            #                                       point_jump=jump_size,
+            #                                       metric="manhattan")
+            #
+            #     if additional_dimensions:
+            #         logger.info("Computing additional dimensions...")
+            #         # Two of them: validation set and subset of training set
+            #
+            #         PERCENTAGES = [2, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+            #
+            #         for ph_perc in PERCENTAGES:
+            #             n_ph = int(loss_history_np.shape[1] * ph_perc / 100.)
+            #             ph_dim_subset_based = fast_ripser(loss_history_np[..., :n_ph],
+            #                                               max_points=ripser_points,
+            #                                               min_points=min_points,
+            #                                               point_jump=jump_size,
+            #                                               metric="manhattan")
+            #             subset_dim_dict.update({
+            #                 f"ph_dim_subset_based_{ph_perc}": ph_dim_subset_based
+            #             })
+            #
+            # else:
+            #     ph_dim_euclidean = "non_computed"
+            #     ph_dim_losses_based = "non_computed"
 
-                logger.info("Computing euclidean PH dim...")
-                ph_dim_euclidean = fast_ripser(weights_history_np,
-                                               max_points=ripser_points,
-                                               min_points=min_points,
-                                               point_jump=jump_size)
+            metric = 'euclidean'
+            metric_pseudo = 'manhattan'
+            # w = weights_history_np
+            w_pseudo = loss_history_np
 
-                logger.info("Computing L1 losses based PH dim...")
-                ph_dim_losses_based = fast_ripser(loss_history_np,
-                                                  max_points=ripser_points,
-                                                  min_points=min_points,
-                                                  point_jump=jump_size,
-                                                  metric="manhattan")
+            # dm = pairwise_distances(w, metric=metric)
 
-                if additional_dimensions:
-                    logger.info("Computing additional dimensions...")
-                    # Two of them: validation set and subset of training set
+            pseudo_distance_matrix = pairwise_distances(w_pseudo, metric=metric_pseudo)
 
-                    PERCENTAGES = [2, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+            # np.array(pseudo_distance_matrix)
 
-                    for ph_perc in PERCENTAGES:
-                        n_ph = int(loss_history_np.shape[1] * ph_perc / 100.)
-                        ph_dim_subset_based = fast_ripser(loss_history_np[..., :n_ph],
-                                                          max_points=ripser_points,
-                                                          min_points=min_points,
-                                                          point_jump=jump_size,
-                                                          metric="manhattan")
-                        subset_dim_dict.update({
-                            f"ph_dim_subset_based_{ph_perc}": ph_dim_subset_based
-                        })
+            # dm_path_folder = exp_folder / 'distance_matrix_folder'
+            # dm_path_folder.mkdir(parents=True, exist_ok=True)
+            # TODO: make this work with dm_path_folder
 
-            else:
-                ph_dim_euclidean = "non_computed"
-                ph_dim_losses_based = "non_computed"
+            save_dm_file = save_folder / "distance_matrix.npy"
+            print('dm_path', save_dm_file)
+            logger.info(f"Print matrix patj", save_dm_file)
+            np.save(str(save_dm_file), pseudo_distance_matrix)
+            logger.info(f"Print matrix", pseudo_distance_matrix)
+            print(pseudo_distance_matrix)
 
             test_acc = evaluation_history_TEST[-1][2]
             train_acc = evaluation_history_TRAIN[-1][2]
 
             exp_dict = {
-                "ph_dim_euclidean": ph_dim_euclidean,
-                "ph_dim_losses_based": ph_dim_losses_based,
+                # "ph_dim_euclidean": ph_dim_euclidean,
+                # "ph_dim_losses_based": ph_dim_losses_based,
                 "train_acc": train_acc,
                 "eval_acc": test_acc,
                 "acc_gap": train_acc - test_acc,
@@ -339,7 +470,8 @@ def main(iterations: int = 10000000,
                 "width": width,
                 "model": model,
                 "last_losses": f"outputs_loss_{lr}_{batch_size_train}.npy",
-                "iterations": i
+                "iterations": i,
+
             }
             exp_dict.update(subset_dim_dict)
 

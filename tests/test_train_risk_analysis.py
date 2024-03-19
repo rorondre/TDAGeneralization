@@ -1,6 +1,7 @@
 import json
 import tempfile
 from pathlib import Path
+import numpy as np
 
 from models.fc import fc_mnist
 from PHDim.__main__ import AnalysisOptions
@@ -67,7 +68,7 @@ def test_train_risk_analysis():
                                   bs_max=4,
                                   batch_size_eval=2,
                                   log_weights=True,
-                                  compute_dimensions=False,
+                                  compute_dimensions=True,
                                   project_name="pytest",
                                   ripser_points=10,
                                   jump=5,
@@ -104,6 +105,23 @@ def test_train_risk_analysis():
         # Testing that weights have been saved
         weights_dir = exp_folder / "weights"
         assert weights_dir.is_dir(), str(weights_dir)
+
+        # Test the distance matrix have been saved
+        # dist_matrix_dir = exp_folder / "distance_matrix_folder"
+        # assert dist_matrix_dir.is_dir(), str(dist_matrix_dir)
+
+        # Test that the distance matrix folder has been created
+        dist_matrix_file_path = exp_folder / "distance_matrix.npy"
+        dist_matrix = np.load(dist_matrix_file_path)
+        print('The shape is', dist_matrix.shape[0])
+        assert dist_matrix.shape[0] == 9
+
+        # Test the converged weights have been saved
+        # converged_weights = exp_folder / "distance_matrix.npy"
+        # dist_matrix = np.load(distance_matrix_dir)
+        # print('The shape is', dist_matrix.shape[0])
+        # assert dist_matrix.shape[0] == 9
+
 
         for exp_num in [0, 1]:
             if not (weights_dir / f"weights_{exp_num}.pth").exists():
