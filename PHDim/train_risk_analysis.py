@@ -66,6 +66,7 @@ def main(
          min_points: int = 200,
          seed: int = 42,
          save_weights_file: str = None,
+         save_distance_matrix_file: str = None,
          compute_dimensions: bool = True,
          # weight_file: str = None,
          #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/model_weights/vit_cifar10/vit_cifar10_patch4_input32.pth',
@@ -73,12 +74,13 @@ def main(
          #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights.pth',
          #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights_with_pretraining_small_test_3000_it.pth',
 
-         # Training accuracy of 100 produced with the following weights, after 76000 epochs
+         # Training accuracy of 100 produced with the following weights, after 76000 iterations
          #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged.pth',
 
          weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged_final_more_than_3000_really_final.pth',
 
-         ripser_points: int = 10,
+         # ripser_points: int = 10,
+         ripser_points: int = 5,
          jump: int = 20,
          additional_dimensions: bool = False,
          data_proportion: float = 1.):
@@ -174,9 +176,9 @@ def main(
             # print("loading pretrained weights . . .")
             state_dict = torch.load(weight_file, map_location="cpu")
             model_state_dict = state_dict['model_state_dict']
-            for key, value in state_dict.items():
-                print('The keys are')
-                print(key, value)
+            # for key, value in state_dict.items():
+            #     print('The keys are')
+            #     print(key, value)
             # checkpoint_key = 'student'
             # if checkpoint_key is not None and checkpoint_key in state_dict:
             #     print(f"Take key {checkpoint_key} in provided checkpoint dict")
@@ -337,10 +339,11 @@ def main(
 
             # It might be a good idea to save the weights at this point
             # Saving weights if specified
-            if save_weights_file is not None:
-                logger.info(f"Saving last weights in {str(save_weights_file)}")
-                torch.save(net.state_dict(), str(save_weights_file))
-                exp_dict["saved_weights"] = str(save_weights_file)
+
+            # if save_weights_file is not None:
+            #     logger.info(f"Saving last weights in {str(save_weights_file)}")
+            #     torch.save(net.state_dict(), str(save_weights_file))
+            #     exp_dict["saved_weights"] = str(save_weights_file)
 
             if compute_dimensions:
                 # it fails at this line:
@@ -475,13 +478,18 @@ def main(
             }
             exp_dict.update(subset_dim_dict)
 
+            if save_distance_matrix_file is not None:
+                logger.info(f"Saving pseudo distance matrix in {str(save_distance_matrix_file)}")
+                np.save(str(save_distance_matrix_file), pseudo_distance_matrix)
+                exp_dict["saved_distance_matrix"] = str(save_distance_matrix_file)
+
             break
 
         # Saving weights if specified
-        if save_weights_file is not None:
-            logger.info(f"Saving last weights in {str(save_weights_file)}")
-            torch.save(net.state_dict(), str(save_weights_file))
-            exp_dict["saved_weights"] = str(save_weights_file)
+        # if save_weights_file is not None:
+        #     logger.info(f"Saving last weights in {str(save_weights_file)}")
+        #     torch.save(net.state_dict(), str(save_weights_file))
+        #     exp_dict["saved_weights"] = str(save_weights_file)
 
     return exp_dict
 

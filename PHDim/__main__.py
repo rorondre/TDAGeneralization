@@ -30,8 +30,9 @@ class AnalysisOptions(BaseModel):
     All hyperparameters of the experiement are defined here
     """
 
-    iterations: int = 10000000000  # Maximum authorized number of iterations
+    iterations: int = 1 # Maximum authorized number of iterations
     log_weights: bool = True  # Whether we want to save final weights of the experiment
+    log_distance_matrix: bool = True # Whether we want to save the distance matrix from each experiment
     batch_size_eval: int = 5000  # batch size used for evaluation
     lrmin: float = 0.005  # minimum learning rate in teh experiment
     lrmax: float = 0.1  # maximum learning rate in the experiment
@@ -40,22 +41,27 @@ class AnalysisOptions(BaseModel):
     eval_freq: int = 3000  # at which frequency we evaluate the model (training and validation sets)
     dataset: str = "cifar10"  # dataset we use
     data_path: str = "~/data/"  # where to find the data
-    model: str = "alexnet"  # model, currently supported: ["fc", "alexnet", "vgg", "lenet"]
+    model: str = "vit"  # model, currently supported: ["fc", "alexnet", "vgg", "lenet", "vit"]
     save_folder: str = "./results"  # Where to save the results
     depth: int = 5  # depth of the network (for FCNN)
     width: int = 200  # width of the network (for FCNN)
     optim: str = "SGD"  # Optimizer
     min_points: int = 1000  # minimum number of points used to compute the PH dimension
-    num_exp_lr: int = 6  # Number of batch sizes we use
-    num_exp_bs: int = 6  # Number of learning rates we use
+    # num_exp_lr: int = 6  # Number of batch sizes we use
+    # num_exp_bs: int = 6  # Number of learning rates we use
+    num_exp_lr: int = 3  # Number of batch sizes we use
+    num_exp_bs: int = 3  # Number of learning rates we use
     compute_dimensions: bool = True  # whether or not we compute the PH dimensions
     project_name: str = "ph_dim_mnist"  # project name for WANDB logging
-    initial_weights: str = None  # Initial weights if they exist, always none in our work
-    ripser_points: int = 5000  # Maximum number of points used to compute the PH dimension
+    # initial_weights: str = None  # Initial weights if they exist, always none in our work
+    initial_weights: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged_final_more_than_3000_really_final.pth'  # Initial weights if they exist, always none in our work
+    # ripser_points: int = 5000  # Maximum number of points used to compute the PH dimension
+    ripser_points: int = 10  # Maximum number of points used to compute the PH dimension
     seed: int = 1234  # seed
     jump: int = 20  # number of finite sets drawn to compute the PH dimension, see https://arxiv.org/abs/2111.13171v1
     additional_dimensions: bool = False  # whether or not compute the ph dimensions used in the robustness experiment
-    data_proportion: float = 1. # Proportion of data to use (between 0 and 1), used for pytests
+    # data_proportion: float = 1. # Proportion of data to use (between 0 and 1), used for pytests
+    data_proportion: float = 0.1 # Proportion of data to use (between 0 and 1), used for pytests
 
     def __call__(self):
 
@@ -77,6 +83,12 @@ class AnalysisOptions(BaseModel):
         else:
             weights_dir = None
 
+        if self.log_weights:
+            dist_matrix_dir = exp_folder / "distance_matrices"
+            dist_matrix_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            dist_matrix_dir = None
+
         if self.lrmin > self.lrmax:
             raise ValueError(f"lrmin ({self.lrmin}) should be smaller than or equal to lmax ({self.lrmax})")
 
@@ -87,6 +99,8 @@ class AnalysisOptions(BaseModel):
         experiment_results = {}
 
         logger.info(f"Launching {self.num_exp_lr * self.num_exp_bs} experiences")
+
+        # check that we are launching 9 experiments
 
         # WANDB group
         group = str(datetime.datetime.now()).replace(" ", "_").replace(":", "_").split(".")[0]
@@ -102,6 +116,11 @@ class AnalysisOptions(BaseModel):
                     save_weights_file = weights_dir / f"weights_{exp_num}.pth"
                 else:
                     save_weights_file = None
+
+                if self.log_distance_matrix:
+                    save_distance_matrix_file = dist_matrix_dir / f"dist_matrix_{exp_num}.npy"
+                else:
+                    save_distance_matrix_file = None
 
                 # Uncomment for wandb logging
                 # reset_wandb_env()
@@ -128,6 +147,7 @@ class AnalysisOptions(BaseModel):
                     self.min_points,
                     self.seed,
                     save_weights_file,
+                    save_distance_matrix_file,
                     self.compute_dimensions,
                     self.initial_weights,
                     ripser_points=self.ripser_points,
