@@ -2,6 +2,7 @@ from collections import deque
 from pathlib import Path
 import os
 import datetime
+import json
 
 import numpy as np
 import torch
@@ -42,7 +43,7 @@ def get_weights(net):
 
 
 def main(
-        iterations: int = 10000000,
+        iterations: int = 10000,
         #  iterations: int = 3001,
          batch_size_train: int = 100,
          batch_size_eval: int = 100,
@@ -82,7 +83,10 @@ def main(
          ripser_points: int = 5,
          jump: int = 20,
          additional_dimensions: bool = False,
-         data_proportion: float = 1.):
+         data_proportion: float = 1.,
+         # For the evaluation of the pseudometric, unused for the moment
+         proportion_eval: int = 500,
+         id_lr: int = 0):
 
     # Creating files to save results
     save_folder = Path(save_folder)
@@ -316,7 +320,7 @@ def main(
 
         if CONVERGED:
             # we are reaching here
-            print('We have converged!!!')
+            # print('We have converged!!!')
             net.eval()
             # we need to save the weights we have converged to so that it is easy to finetune
             checkpoint_name = 'checkpoint_trial'
@@ -351,7 +355,6 @@ def main(
                 # it fails at this line:
                 # clear cache
                 torch.cuda.empty_cache()
-                proportion_eval = 500
                 proportion_eval_x = eval_x[:500,...]
                 proportion_eval_y = eval_y[:500,...]
 
@@ -393,47 +396,7 @@ def main(
             #     del weights_history
 
             loss_history_np = torch.stack(tuple(loss_history)).cpu().numpy()
-
-            # jump_size is a parameter of the persistent homology part
-            # Ijump defines how many finite set are drawn to perform the affine regression
-            jump_size = int((ripser_points - min_points) / jump)
-
-            subset_dim_dict = {}
-            # if compute_dimensions:
-            #
-            #     logger.info("Computing euclidean PH dim...")
-            #     ph_dim_euclidean = fast_ripser(weights_history_np,
-            #                                    max_points=ripser_points,
-            #                                    min_points=min_points,
-            #                                    point_jump=jump_size)
-            #
-            #     logger.info("Computing L1 losses based PH dim...")
-            #     ph_dim_losses_based = fast_ripser(loss_history_np,
-            #                                       max_points=ripser_points,
-            #                                       min_points=min_points,
-            #                                       point_jump=jump_size,
-            #                                       metric="manhattan")
-            #
-            #     if additional_dimensions:
-            #         logger.info("Computing additional dimensions...")
-            #         # Two of them: validation set and subset of training set
-            #
-            #         PERCENTAGES = [2, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-            #
-            #         for ph_perc in PERCENTAGES:
-            #             n_ph = int(loss_history_np.shape[1] * ph_perc / 100.)
-            #             ph_dim_subset_based = fast_ripser(loss_history_np[..., :n_ph],
-            #                                               max_points=ripser_points,
-            #                                               min_points=min_points,
-            #                                               point_jump=jump_size,
-            #                                               metric="manhattan")
-            #             subset_dim_dict.update({
-            #                 f"ph_dim_subset_based_{ph_perc}": ph_dim_subset_based
-            #             })
-            #
-            # else:
-            #     ph_dim_euclidean = "non_computed"
-            #     ph_dim_losses_based = "non_computed"
+  
 
             metric = 'euclidean'
             metric_pseudo = 'manhattan'
@@ -450,19 +413,10 @@ def main(
             # dm_path_folder.mkdir(parents=True, exist_ok=True)
             # TODO: make this work with dm_path_folder
 
-            save_dm_file = save_folder / "distance_matrix.npy"
-            print('dm_path', save_dm_file)
-            logger.info(f"Print matrix patj", save_dm_file)
-            np.save(str(save_dm_file), pseudo_distance_matrix)
-            logger.info(f"Print matrix", pseudo_distance_matrix)
-            print(pseudo_distance_matrix)
-
             test_acc = evaluation_history_TEST[-1][2]
             train_acc = evaluation_history_TRAIN[-1][2]
 
             exp_dict = {
-                # "ph_dim_euclidean": ph_dim_euclidean,
-                # "ph_dim_losses_based": ph_dim_losses_based,
                 "train_acc": train_acc,
                 "eval_acc": test_acc,
                 "acc_gap": train_acc - test_acc,
@@ -478,7 +432,6 @@ def main(
                 "iterations": i,
 
             }
-            exp_dict.update(subset_dim_dict)
 
             if save_distance_matrix_file is not None:
                 logger.info(f"Saving pseudo distance matrix in {str(save_distance_matrix_file)}")
@@ -497,7 +450,12 @@ def main(
             )
         logger.info(f"Saved last weights in {str(save_weights_file)}")
         # torch.save(net.state_dict(), str(save_weights_file))
-        # exp_dict["saved_weights"] = str(save_weights_file)
+        exp_dict["saved_weights"] = str(save_weights_file)
+
+    # Saving Exp_dict
+    exp_dict_path = save_folder / f"exp_lr_{id_lr}_bs_{batch_size_train}.json"
+    with open(str(exp_dict_path), 'w') as exp_dict_file:
+        json.dump(exp_dict, exp_dict_file, indent=2)
 
     return exp_dict
 

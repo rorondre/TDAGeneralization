@@ -62,7 +62,7 @@ class AnalysisOptions(BaseModel):
     jump: int = 20  # number of finite sets drawn to compute the PH dimension, see https://arxiv.org/abs/2111.13171v1
     additional_dimensions: bool = False  # whether or not compute the ph dimensions used in the robustness experiment
     # data_proportion: float = 1. # Proportion of data to use (between 0 and 1), used for pytests
-    data_proportion: float = 0.1 # Proportion of data to use (between 0 and 1), used for pytests
+    data_proportion: float = 1. # Proportion of data to use (between 0 and 1), used for pytests
 
     def __call__(self):
 
@@ -100,8 +100,6 @@ class AnalysisOptions(BaseModel):
         experiment_results = {}
 
         logger.info(f"Launching {self.num_exp_lr * self.num_exp_bs} experiences")
-
-        # check that we are launching 9 experiments
 
         # WANDB group
         group = str(datetime.datetime.now()).replace(" ", "_").replace(":", "_").split(".")[0]

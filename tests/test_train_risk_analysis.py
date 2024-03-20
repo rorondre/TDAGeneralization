@@ -110,14 +110,17 @@ def test_train_risk_analysis():
         weights_dir = exp_folder / "weights"
         assert weights_dir.is_dir(), str(weights_dir)
 
-
-        # Test that the distance matrix folder has been created
-        dist_matrix_file_path = exp_folder / "distance_matrix.npy"
-        dist_matrix = np.load(dist_matrix_file_path)
-        print('The shape is', dist_matrix.shape[0])
-        assert dist_matrix.shape[0] == RIPSER_POINTS
-
-
         for exp_num in [0, 1]:
             if not (weights_dir / f"weights_{exp_num}.pth").exists():
                 raise FileNotCreatedError(f"Weights file weights_{exp_num}.pth not created")
+
+
+        # Test that the distance matrix folder has been created
+        for exp_num in [0, 1]:
+            dist_matrix_file_path = exp_folder / "distance_matrices" / f"dist_matrix_{exp_num}.npy"
+            dist_matrix = np.load(dist_matrix_file_path)
+            assert dist_matrix.shape[0] == RIPSER_POINTS, dist_matrix.shape
+            assert dist_matrix.shape[1] == RIPSER_POINTS, dist_matrix.shape
+            assert dist_matrix.ndim == 2, dist_matrix.shape
+        
+

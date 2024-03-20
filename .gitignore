@@ -11,3 +11,8 @@ util.py
 **.pyc
 
 save_finetuned/
+
+tests_directory/
+
+*.err*
+*.out*
