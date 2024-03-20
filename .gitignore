@@ -1,4 +1,13 @@
+
+# Parallel scripts
 launcher_parallel.py
 experiment_utils.py
 run_exp.py
 util.py
+
+# pycache
+**/__pychache__/*
+*/__pychache__/*
+**.pyc
+
+save_finetuned/

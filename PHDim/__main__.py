@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 from pathlib import Path
+from typing import Optional
 
 import fire
 import numpy as np
@@ -52,9 +53,9 @@ class AnalysisOptions(BaseModel):
     num_exp_lr: int = 3  # Number of batch sizes we use
     num_exp_bs: int = 3  # Number of learning rates we use
     compute_dimensions: bool = True  # whether or not we compute the PH dimensions
-    project_name: str = "ph_dim_mnist"  # project name for WANDB logging
+    project_name: str = "ph_and_magnitude"  # project name for WANDB logging
     # initial_weights: str = None  # Initial weights if they exist, always none in our work
-    initial_weights: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged_final_more_than_3000_really_final.pth'  # Initial weights if they exist, always none in our work
+    initial_weights: Optional[str] = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged_final_more_than_3000_really_final.pth'  # Initial weights if they exist, always none in our work
     # ripser_points: int = 5000  # Maximum number of points used to compute the PH dimension
     ripser_points: int = 10  # Maximum number of points used to compute the PH dimension
     seed: int = 1234  # seed

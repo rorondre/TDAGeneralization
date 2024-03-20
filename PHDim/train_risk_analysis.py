@@ -50,7 +50,6 @@ def main(
          # batch_size_eval: int = 100,
          # batch_size_train: int = 32,
          # batch_size_eval: int = 32,
-
          lr: float = 1.e-1,
          eval_freq: int = 1000,
          # dataset: str = "mnist",
@@ -93,11 +92,11 @@ def main(
     # exp_folder = save_folder / str(datetime.datetime.now()).replace(" ", "_").replace(":", "_")
     # exp_folder.mkdir(parents=True, exist_ok=True)
 
-    model_name = model
-    model_name += f"-{model}-{dataset}"
-    save_path = os.path.join(os.getcwd(), 'save_finetuned', model_name)
-    if save_path:
-        os.makedirs(save_path, exist_ok=True)
+    # model_name = model
+    # model_name += f"-{model}-{dataset}"
+    # save_path = os.path.join(os.getcwd(), 'save_finetuned', model_name)
+    # if save_path:
+    #     os.makedirs(save_path, exist_ok=True)
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     logger.info(f"on device {str(device)}")
@@ -162,6 +161,10 @@ def main(
                                       qkv_bias=True,
                                       drop_path_rate=sd,
                                       norm_layer=partial(nn.LayerNorm, eps=1e-6)).to(device)
+
+        else:
+            raise NotImplementedError("Only CIFAR10 is supported with VIT for now.")
+
     logger.info("Network: ")
     print(net)
     n_parameters = sum(p.numel() for p in net.parameters() if p.requires_grad)
@@ -259,7 +262,6 @@ def main(
 
     logger.info("Starting training")
     for i, (x, y) in enumerate(circ_train_loader):
-        print('We are at iteration', i)
 
         # Sequentially running evaluation step
         # first record is at the initial point
@@ -325,15 +327,15 @@ def main(
             # weights_path = exp_folder / "converged_weights.pth"
             # print('dm_path', weights_path)
             # logger.info(f"Print path to saved weights", weights_path)
-            torch.save({
-                'model_state_dict': net.state_dict(),
-                'epoch': iterations,
-                # 'optimizer_state_dict': optimizer.state_dict(),
-                # 'scheduler': scheduler.state_dict(),
-            },
-                os.path.join(save_path, 'checkpoint_trial_further.pth')
-                # weights_path
-            )
+            # torch.save({
+            #     'model_state_dict': net.state_dict(),
+            #     'epoch': iterations,
+            #     # 'optimizer_state_dict': optimizer.state_dict(),
+            #     # 'scheduler': scheduler.state_dict(),
+            # },
+            #     os.path.join(save_path, 'checkpoint_trial_further.pth')
+            #     # weights_path
+            # )
 
             # weights_history.append(get_weights(net))
 
@@ -367,7 +369,7 @@ def main(
         if (len(loss_history) >= ripser_points) and compute_dimensions:
             STOP = True
             # weights_history.popleft()
-            loss_history.popleft()
+            # loss_history.popleft()
 
         # final evaluation and saving results
         if STOP and CONVERGED:
@@ -485,11 +487,17 @@ def main(
 
             break
 
-        # Saving weights if specified
-        # if save_weights_file is not None:
-        #     logger.info(f"Saving last weights in {str(save_weights_file)}")
-        #     torch.save(net.state_dict(), str(save_weights_file))
-        #     exp_dict["saved_weights"] = str(save_weights_file)
+    # Saving weights if specified
+    if save_weights_file is not None:
+        torch.save({
+                'model_state_dict': net.state_dict(),
+                'epoch': iterations,
+            },
+                str(save_weights_file)
+            )
+        logger.info(f"Saved last weights in {str(save_weights_file)}")
+        # torch.save(net.state_dict(), str(save_weights_file))
+        # exp_dict["saved_weights"] = str(save_weights_file)
 
     return exp_dict
 

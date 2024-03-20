@@ -51,13 +51,16 @@ class WeightsUncorrectlySaved(BaseException):
     ...
 
 
+RIPSER_POINTS=10
+
 def test_train_risk_analysis():
 
     with tempfile.TemporaryDirectory() as output_dir:
 
-        options = AnalysisOptions(iterations=20,
+        options = AnalysisOptions(iterations=3,
                                   data_proportion=0.001,
                                   dataset="mnist",
+                                  model='fc',
                                   save_folder=output_dir,
                                   min_points=1,
                                   num_exp_bs=1,
@@ -70,9 +73,10 @@ def test_train_risk_analysis():
                                   log_weights=True,
                                   compute_dimensions=True,
                                   project_name="pytest",
-                                  ripser_points=10,
+                                  ripser_points=RIPSER_POINTS,
                                   jump=5,
-                                  resize=8)
+                                  resize=8,
+                                  initial_weights=None)
 
         exp_folder = options()
 
@@ -106,21 +110,12 @@ def test_train_risk_analysis():
         weights_dir = exp_folder / "weights"
         assert weights_dir.is_dir(), str(weights_dir)
 
-        # Test the distance matrix have been saved
-        # dist_matrix_dir = exp_folder / "distance_matrix_folder"
-        # assert dist_matrix_dir.is_dir(), str(dist_matrix_dir)
 
         # Test that the distance matrix folder has been created
         dist_matrix_file_path = exp_folder / "distance_matrix.npy"
         dist_matrix = np.load(dist_matrix_file_path)
         print('The shape is', dist_matrix.shape[0])
-        assert dist_matrix.shape[0] == 9
-
-        # Test the converged weights have been saved
-        # converged_weights = exp_folder / "distance_matrix.npy"
-        # dist_matrix = np.load(distance_matrix_dir)
-        # print('The shape is', dist_matrix.shape[0])
-        # assert dist_matrix.shape[0] == 9
+        assert dist_matrix.shape[0] == RIPSER_POINTS
 
 
         for exp_num in [0, 1]:
