@@ -77,10 +77,12 @@ def main(
          # Training accuracy of 100 produced with the following weights, after 76000 iterations
          #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged.pth',
 
-         weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged_final_more_than_3000_really_final.pth',
+         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged_final_more_than_3000_really_final.pth',
 
-         # ripser_points: int = 10,
-         ripser_points: int = 5,
+         weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_could_be_it.pth',
+
+        # ripser_points: int = 10,
+         ripser_points: int = 500,
          jump: int = 20,
          additional_dimensions: bool = False,
          data_proportion: float = 1.,
@@ -179,10 +181,10 @@ def main(
         logger.info(f"Loading weights from {str(weight_file)}")
         if Path(weight_file).suffix == ".pth":
             print('we want to be here!')
-            model_dict = net.state_dict()
+            # model_dict = net.state_dict()
             # print("loading pretrained weights . . .")
-            state_dict = torch.load(weight_file, map_location="cpu")
-            model_state_dict = state_dict['model_state_dict']
+            # state_dict = torch.load(weight_file, map_location="cpu")
+            # model_state_dict = state_dict['model_state_dict']
             # for key, value in state_dict.items():
             #     print('The keys are')
             #     print(key, value)
@@ -199,7 +201,8 @@ def main(
             # # model.load_state_dict(state_dict, strict=False)
             # net.load_state_dict(state_dict, strict=False)
             # net.load_state_dict(torch.load(str(weight_file)))
-            net.load_state_dict(state_dict['model_state_dict'])
+            net.load_state_dict(torch.load(weight_file))
+            # model.load_state_dict(torch.load(PATH))
         elif Path(weight_file).suffix == ".pyT":
             net = torch.load(str(weight_file))
         else:
