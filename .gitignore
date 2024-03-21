@@ -16,3 +16,6 @@ tests_directory/
 
 *.err*
 *.out*
+
+*.pth
+weights/
