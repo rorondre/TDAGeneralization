@@ -19,3 +19,6 @@ tests_directory/
 
 *.pth
 weights/
+
+final_results
+final_results/*
