@@ -44,42 +44,23 @@ def get_weights(net):
 
 def main(
         iterations: int = 10000,
-        #  iterations: int = 3001,
          batch_size_train: int = 100,
          batch_size_eval: int = 100,
-         # batch_size_train: int = 100,
-         # batch_size_eval: int = 100,
-         # batch_size_train: int = 32,
-         # batch_size_eval: int = 32,
          lr: float = 1.e-1,
          eval_freq: int = 1000,
-         # dataset: str = "mnist",
          dataset: str = "cifar10",
          data_path: str = "~/data/",
-         # model: str = "fc",
          model: str = "vit",
          save_folder: str = "results",
          depth: int = 5,
          width: int = 50,
          optim: str = "SGD",
-         # loss_function: str = "",
          min_points: int = 200,
          seed: int = 42,
          save_weights_file: str = None,
          save_distance_matrix_file: str = None,
-         compute_dimensions: bool = True,
-         # weight_file: str = None,
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/model_weights/vit_cifar10/vit_cifar10_patch4_input32.pth',
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights_with_pretraining.pth',
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights.pth',
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights_with_pretraining_small_test_3000_it.pth',
-
-         # Training accuracy of 100 produced with the following weights, after 76000 iterations
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged.pth',
-
+         compute_dimensions: bool = True,    
          weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged_final_more_than_3000_really_final.pth',
-
-         # ripser_points: int = 10,
          ripser_points: int = 5,
          jump: int = 20,
          additional_dimensions: bool = False,
@@ -183,6 +164,7 @@ def main(
             # print("loading pretrained weights . . .")
             state_dict = torch.load(weight_file, map_location="cpu")
             model_state_dict = state_dict['model_state_dict']
+            # TODO: clean this
             # for key, value in state_dict.items():
             #     print('The keys are')
             #     print(key, value)
@@ -225,8 +207,9 @@ def main(
                           ignore_index=- 100, reduce=None,
                           reduction='none', label_smoothing=0.1).to(device)
 
-    # crit = nn.CrossEntropyLoss().to(device)
-    # crit_unreduced = nn.CrossEntropyLoss(reduction="none").to(device)
+    else:
+        crit = nn.CrossEntropyLoss().to(device)
+        crit_unreduced = nn.CrossEntropyLoss(reduction="none").to(device)
 
 
 
@@ -320,8 +303,9 @@ def main(
 
         if CONVERGED:
             # we are reaching here
-            # print('We have converged!!!')
             net.eval()
+
+            # TODO: clean this
             # we need to save the weights we have converged to so that it is easy to finetune
             checkpoint_name = 'checkpoint_trial'
             # add the training and test accuracy value at the checkpoint
