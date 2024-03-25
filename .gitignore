@@ -1,9 +1,9 @@
 
 # Parallel scripts
-launcher_parallel.py
-experiment_utils.py
-run_exp.py
-util.py
+# launcher_parallel.py
+# experiment_utils.py
+# run_exp.py
+# util.py
 
 # pycache
 **/__pychache__/*

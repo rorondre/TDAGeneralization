@@ -193,7 +193,10 @@ def main(
             # # model.load_state_dict(state_dict, strict=False)
             # net.load_state_dict(state_dict, strict=False)
             # net.load_state_dict(torch.load(str(weight_file)))
-            net.load_state_dict(torch.load(weight_file))
+            if torch.cuda.is_available():
+                net.load_state_dict(torch.load(weight_file))
+            else:
+                net.load_state_dict(torch.load(weight_file), map_location="cpu")
             # model.load_state_dict(torch.load(PATH))
         elif Path(weight_file).suffix == ".pyT":
             net = torch.load(str(weight_file))
