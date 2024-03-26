@@ -16,6 +16,7 @@ from loguru import logger
 WEIGHT_FILE = "weights/checkpoint_95_3.pth"
 
 
+
 # os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 # os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
 
@@ -140,7 +141,7 @@ PYTHONPATH=$PWD python launcher_parallel.py --num_gpus 0 --n_lr 2 --n_bs 2 --dep
 
 """
 Test Commmand VIT
-PYTHONPATH=$PWD python launcher_parallel.py --num_gpus 0 --num_cpus 1 --n_lr 1 --n_bs 1 --result_dir tests_directory --num_seeds_per_hparam 1 --dataset cifar10 --model vit --iterations 2 --ripser_points 3 --min_points 1 --weight_file 1 --data_proportion 0.001 --bs_max 2 --bs_min 2
+PYTHONPATH=$PWD python launcher_parallel.py --num_gpus 1 --num_cpus 1 --n_lr 1 --n_bs 1 --result_dir tests_directory --num_seeds_per_hparam 1 --dataset cifar10 --model vit --iterations 2 --ripser_points 3 --min_points 1 --weight_file 1 --data_proportion 0.001 --bs_max 4 --bs_min 2
 """
 
 
@@ -148,21 +149,22 @@ if __name__ == '__main__':
 
     SEED = int(str(time.time()).split(".")[1])
 
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str, default=str(datetime.datetime.now()).replace(" ", "_").replace(":", "_").split(".")[0])
     parser.add_argument('--mode', type=str, default="euler_slurm")
     parser.add_argument('--long', type=int, default=0)
 
     parser.add_argument('--num_cpus', type=int, default=20)
-    parser.add_argument('--num_gpus', type=int, default=2)
+    parser.add_argument('--num_gpus', type=int, default=3)
 
-    # Variation of learning rate and batch size
-    parser.add_argument('--lr_min', type=float, default=0.000001)
-    parser.add_argument('--lr_max', type=float, default=0.0001)
-    parser.add_argument('--bs_min', type=int, default=150)
-    parser.add_argument('--bs_max', type=int, default=300)
-    parser.add_argument('--n_lr', type=int, default=4)
-    parser.add_argument('--n_bs', type=int, default=4)
+    # Variation of learning rate and batch size --> GRID
+    parser.add_argument('--lr_min', type=float, default=1.e-6)
+    parser.add_argument('--lr_max', type=float, default=1.e-4)
+    parser.add_argument('--bs_min', type=int, default=256)
+    parser.add_argument('--bs_max', type=int, default=256)
+    parser.add_argument('--n_lr', type=int, default=6)
+    parser.add_argument('--n_bs', type=int, default=1)
 
 
     # Parameters which are launcher specific
@@ -180,13 +182,15 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default="vit")
     parser.add_argument('--depth', type=int, default=5)
     parser.add_argument('--width', type=int, default=50)
-    parser.add_argument('--optim', type=str, default="SGD")
+    parser.add_argument('--optim', type=str, default="Adam")
     parser.add_argument('--min_points', type=int, default=200)
     parser.add_argument('--save_weights', type=int, default=1)
     parser.add_argument('--compute_dimensions', type=int, default=1)
     parser.add_argument('--weight_file', type=int, default=1)  # Initial weights
     parser.add_argument('--ripser_points', type=int, default=5000)
     parser.add_argument('--data_proportion', type=float, default=1.)
+    parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.01)
+    
     
     # Unused arguments, needing to be implemented or removed
     parser.add_argument('--proportion_eval', type=int, default=50000) # proportion to eval the pseudometric, unused at the moment

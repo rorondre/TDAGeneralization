@@ -64,7 +64,8 @@ def main(args_):
                         args_.additional_dimensions,
                         args_.data_proportion,
                         args_.proportion_eval,
-                        args_.id_lr
+                        args_.id_lr,
+                        args_.pseudo_matrix_data_proportion
                         )
 
 
@@ -104,6 +105,7 @@ if __name__ == '__main__':
     parser.add_argument('--compute_dimensions', type=int, default=1)
     parser.add_argument('--ripser_points', type=int, default=8000)
     parser.add_argument('--data_proportion', type=float, default=1.)
+    parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.01)
 
     # Unused arguments, needing to be implemented or removed
     parser.add_argument('--proportion_eval', type=int, default=50000) # proportion to eval the pseudometric, unused at the moment

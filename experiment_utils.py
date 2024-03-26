@@ -134,7 +134,7 @@ def generate_run_commands(command_list: List[str], num_cpus: int = 1, num_gpus: 
 
         if num_gpus >= 1:
             partition_string = "#SBATCH --partition=gpu\n" +\
-                f"#SBATCH --gres=gpu:v100:{num_gpus}\n"
+                f"#SBATCH --gres=gpu:rtx8000:{num_gpus}\n"
         else:
             partition_string = "#SBATCH --partition=cpu_devel\n"
 

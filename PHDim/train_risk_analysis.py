@@ -80,7 +80,11 @@ def main(
          data_proportion: float = 1.,
          # For the evaluation of the pseudometric, unused for the moment
          proportion_eval: int = 500,
-         id_lr: int = 0):
+         id_lr: int = 0,
+         pseudo_matrix_data_proportion: float = 0.01):
+
+    # WARNING change 50000 to the number of data points
+    pseudo_matrix_data_number = int(50000 * pseudo_matrix_data_proportion)
 
     # Creating files to save results
     save_folder = Path(save_folder)
@@ -355,11 +359,11 @@ def main(
                 # it fails at this line:
                 # clear cache
                 torch.cuda.empty_cache()
-                proportion_eval_x = eval_x[:500,...]
-                proportion_eval_y = eval_y[:500,...]
+                proportion_eval_x = eval_x[:pseudo_matrix_data_number,...]
+                proportion_eval_y = eval_y[:pseudo_matrix_data_number,...]
 
-                #tr_hist, losses, _ = eval_on_tensors(proportion_eval_x, proportion_eval_y, net, crit_unreduced)
-                tr_hist, losses, _ = eval(train_loader_eval, net, crit_unreduced, opt)
+                tr_hist, losses, _ = eval_on_tensors(proportion_eval_x, proportion_eval_y, net, crit_unreduced)
+                # tr_hist, losses, _ = eval(train_loader_eval, net, crit_unreduced, opt)
                 evaluation_history_TRAIN.append([i, *tr_hist])
                 loss_history.append(losses.cpu())
 
