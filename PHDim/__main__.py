@@ -6,7 +6,6 @@ from typing import Optional
 
 import fire
 import numpy as np
-import wandb
 from loguru import logger
 from pydantic import BaseModel
 
@@ -89,7 +88,6 @@ class AnalysisOptions(BaseModel):
 
         logger.info(f"Launching {self.num_exp_lr * self.num_exp_bs} experiences")
 
-        # WANDB group
         group = str(datetime.datetime.now()).replace(" ", "_").replace(":", "_").split(".")[0]
         exp_num = 0
         experiment_results = {}

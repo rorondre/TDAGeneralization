@@ -7,7 +7,6 @@ import json
 import numpy as np
 import torch
 import torch.nn as nn
-import wandb
 from loguru import logger
 
 from models import alexnet, fc_mnist, vgg, fc_cifar, lenet, vit

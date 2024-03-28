@@ -22,16 +22,6 @@ from topology import fast_ripser
 DATA_SEED = 56  # For splitting in test:train
 
 
-def reset_wandb_env():
-    exclude = {
-        "WANDB_PROJECT",
-        "WANDB_ENTITY",
-        "WANDB_API_KEY",
-    }
-    for k, v in os.environ.items():
-        if k.startswith("WANDB_") and k not in exclude:
-            del os.environ[k]
-
 
 def get_weights(net) -> torch.Tensor:
     with torch.no_grad():
@@ -176,7 +166,6 @@ def train_one_model(eval_freq: int = 1000,
             logger.info(f"Evaluation on training set at iteration {i} finished ✅, score (deviation): {np.sqrt(loss_train)}")
 
             avg_train_loss += loss_train
-            wandb.log({"training set loss": loss_train})
 
             # Stopping criterion on instant train loss
             if (i > 0) and (np.abs(loss_train - previous_train_loss) / previous_train_loss < stopping_criterion):
@@ -353,11 +342,6 @@ class BHPAnalysis(BaseModel):
         for k in range(len(lr_tab)):
             for b in range(len(bs_tab)):
 
-                reset_wandb_env()
-                wandb.init(project=self.project_name,
-                           config=self.dict(),
-                           group=group)
-
                 logger.info(f"EXPERIENCE NUMBER {num_exp}")
 
                 exp_dict = train_one_model(self.eval_freq,
@@ -375,7 +359,6 @@ class BHPAnalysis(BaseModel):
                                            self.ph_period,
                                            self.additional_dimensions)
 
-                wandb.log(exp_dict)
                 experiment_results[num_exp] = exp_dict
 
                 save_path = Path(exp_folder) / f"results_{num_exp}.json"

@@ -136,7 +136,7 @@ def main(args_):
 
 """
 Test Commmand
-PYTHONPATH=$PWD python launcher_parallel.py --num_gpus 0 --n_lr 2 --n_bs 2 --depth 0 --result_dir tests_directory --num_seeds_per_hparam 1 --dataset mnist --model fc --depth 2 --width 10 --iterations 2 --ripser_points 5 --min_points 3 --weight_file 0 --data_proportion 0.001 --n_lr 2 --n_bs 2 --bs_max 64
+PYTHONPATH=$PWD python launcher_parallel.py --num_gpus 0 --n_lr 2 --n_bs 2 --depth 0 --result_dir tests_directory --num_seeds_per_hparam 2 --dataset mnist --model fc --depth 2 --width 10 --iterations 2 --ripser_points 5 --min_points 3 --weight_file 0 --data_proportion 0.001 --n_lr 2 --n_bs 2 --bs_max 64 --bs_min 32
 """
 
 """
@@ -162,11 +162,10 @@ if __name__ == '__main__':
     # Variation of learning rate and batch size --> GRID
     parser.add_argument('--lr_min', type=float, default=1.e-6)
     parser.add_argument('--lr_max', type=float, default=1.e-4)
-    parser.add_argument('--bs_min', type=int, default=256)
-    parser.add_argument('--bs_max', type=int, default=256)
-    parser.add_argument('--n_lr', type=int, default=6)
-    parser.add_argument('--n_bs', type=int, default=1)
-
+    parser.add_argument('--bs_min', type=int, default=64)
+    parser.add_argument('--bs_max', type=int, default=512)
+    parser.add_argument('--n_lr', type=int, default=4)
+    parser.add_argument('--n_bs', type=int, default=4)
 
     # Parameters which are launcher specific
     parser.add_argument('--seed', type=int, default=SEED)
