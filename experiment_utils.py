@@ -139,7 +139,7 @@ def generate_run_commands(command_list: List[str], num_cpus: int = 1, num_gpus: 
             partition_string = "#SBATCH --partition=cpu_devel\n"
 
         log_string_file = "#SBATCH --output=%x.out.%j\n"  +\
-                "#SBATCH --error=%x.err.%j\n" 
+                "#SBATCH --error=%x.err.%j\n"
 
 
         # os.system('mkdir slurm_outputs')
@@ -151,6 +151,50 @@ def generate_run_commands(command_list: List[str], num_cpus: int = 1, num_gpus: 
                    partition_string +\
                    log_string_file   
         
+        # if num_gpus > 0:
+        #     bsub_cmd += f'#SBATCH--gpus={num_gpus}\n'
+
+        for python_cmd in command_list:
+            cluster_cmds.append(bsub_cmd + f"\n{python_cmd}\n")
+
+        if promt:
+            answer = input(f"About to submit {len(cluster_cmds)} compute jobs to the cluster. Proceed? [yes/no]")
+        else:
+            answer = 'yes'
+        if answer == 'yes':
+            for cmd in cluster_cmds:
+                if dry:
+                    print(cmd)
+                else:
+                    f = open("temp_script.sh", "w")
+                    f.write(cmd)
+                    f.close()
+                    st = os.stat('temp_script.sh')
+                    os.chmod('temp_script.sh', st.st_mode | stat.S_IEXEC)
+                    os.system('sbatch temp_script.sh')
+                    os.system('rm temp_script.sh')
+
+    elif mode == 'informatics_slurm':
+        cluster_cmds = []
+
+        if num_gpus >= 1:
+            partition_string = "#SBATCH --partition=General_Usage\n" + \
+                               f"#SBATCH --gres=gpu:gtx-1080:{num_gpus}\n"
+        else:
+            partition_string = "#SBATCH --partition=General_Usage\n"
+
+        log_string_file = "#SBATCH --output=%x.out.%j\n" + \
+                          "#SBATCH --error=%x.err.%j\n"
+
+        # os.system('mkdir slurm_outputs')
+        bsub_cmd = '#!/bin/bash\n\n' + \
+                   f'#SBATCH --time={LONG if long else SHORT}:59:59\n' + \
+                   f'#SBATCH --mem-per-cpu={mem}\n' + \
+                   f'#SBATCH -n {num_cpus}\n' + \
+                   f'#SBATCH -o slurm_outputs/out_{np.random.randint(10000000)}.txt\n' + \
+                   partition_string + \
+                   log_string_file
+
         # if num_gpus > 0:
         #     bsub_cmd += f'#SBATCH--gpus={num_gpus}\n'
 

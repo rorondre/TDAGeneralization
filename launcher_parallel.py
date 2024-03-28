@@ -144,6 +144,11 @@ Test Commmand VIT
 PYTHONPATH=$PWD python launcher_parallel.py --num_gpus 1 --num_cpus 1 --n_lr 1 --n_bs 1 --result_dir tests_directory --num_seeds_per_hparam 1 --dataset cifar10 --model vit --iterations 2 --ripser_points 3 --min_points 1 --weight_file 1 --data_proportion 0.001 --bs_max 4 --bs_min 2
 """
 
+"""
+Test Commmand VIT Informatics cluster
+PYTHONPATH=$PWD python launcher_parallel.py --mode informatics_slurm --num_gpus 1 --num_cpus 1 --n_lr 1 --n_bs 1 --result_dir tests_directory --num_seeds_per_hparam 1 --dataset cifar10 --model vit --iterations 2 --ripser_points 3 --min_points 1 --weight_file 1 --data_proportion 0.001 --bs_max 4 --bs_min 2
+"""
+
 
 if __name__ == '__main__':
 
