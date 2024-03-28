@@ -13,18 +13,6 @@ from pydantic import BaseModel
 from PHDim.train_risk_analysis import main as risk_analysis
 
 
-# Uncomment for wandb logging
-# def reset_wandb_env():
-#     exclude = {
-#         "WANDB_PROJECT",
-#         "WANDB_ENTITY",
-#         "WANDB_API_KEY",
-#     }
-#     for k, v in os.environ.items():
-#         if k.startswith("WANDB_") and k not in exclude:
-#             del os.environ[k]
-
-
 class AnalysisOptions(BaseModel):
 
     """
@@ -55,7 +43,7 @@ class AnalysisOptions(BaseModel):
     compute_dimensions: bool = True  # whether or not we compute the PH dimensions
     project_name: str = "ph_and_magnitude"  # project name for WANDB logging
     # initial_weights: str = None  # Initial weights if they exist, always none in our work
-    initial_weights: Optional[str] = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged_final_more_than_3000_really_final.pth'  # Initial weights if they exist, always none in our work
+    initial_weights: Optional[str] = None  # Initial weights if they exist, always none in our work
     # ripser_points: int = 5000  # Maximum number of points used to compute the PH dimension
     ripser_points: int = 10  # Maximum number of points used to compute the PH dimension
     seed: int = 1234  # seed
@@ -121,12 +109,6 @@ class AnalysisOptions(BaseModel):
                 else:
                     save_distance_matrix_file = None
 
-                # Uncomment for wandb logging
-                # reset_wandb_env()
-                # wandb.init(project=self.project_name,
-                        #    config=self.dict(),
-                        #    group=group)
-
                 # Here the seed is not changed
                 logger.info(f"EXPERIENCE NUMBER {k}:{j}")
 
@@ -165,10 +147,6 @@ class AnalysisOptions(BaseModel):
                 if exp_num >= 1:
                     if (Path(exp_folder) / f"results_{exp_num - 1}.json").exists():
                         os.remove(Path(exp_folder) / f"results_{exp_num - 1}.json")
-
-                # Uncomment for Wandb logging
-                # wandb.join()
-                # wandb.log(exp_dict)
 
                 exp_num += 1
 

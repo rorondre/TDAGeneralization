@@ -67,7 +67,7 @@ def test_train_risk_analysis():
                                   num_exp_lr=2,
                                   depth=2,
                                   width=10,
-                                  bs_min=2,
+                                  bs_min=1,
                                   bs_max=4,
                                   batch_size_eval=2,
                                   log_weights=True,

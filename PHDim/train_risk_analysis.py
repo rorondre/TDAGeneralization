@@ -60,50 +60,24 @@ def main(
          save_weights_file: str = None,
          save_distance_matrix_file: str = None,
          compute_dimensions: bool = True,
-         # weight_file: str = None,
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/model_weights/vit_cifar10/vit_cifar10_patch4_input32.pth',
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights_with_pretraining.pth',
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights.pth',
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_convereged_weights_with_pretraining_small_test_3000_it.pth',
-
-         # Training accuracy of 100 produced with the following weights, after 76000 iterations
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged.pth',
-
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/vit-vit-cifar10/checkpoint_trial_final_converged_final_more_than_3000_really_final.pth',
-
          weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_could_be_it.pth',
-
-        # ripser_points: int = 10,
          ripser_points: int = 500,
          jump: int = 20,
          additional_dimensions: bool = False,
          data_proportion: float = 1.,
-         # For the evaluation of the pseudometric, unused for the moment
          proportion_eval: int = 500,
          id_lr: int = 0,
          pseudo_matrix_data_proportion: float = 0.01):
 
-    # WARNING change 50000 to the number of data points
-    pseudo_matrix_data_number = int(50000 * pseudo_matrix_data_proportion)
 
     # Creating files to save results
     save_folder = Path(save_folder)
     assert save_folder.exists(), str(save_folder)
 
-    # TODO: make it work with this folder
-    # exp_folder = save_folder / str(datetime.datetime.now()).replace(" ", "_").replace(":", "_")
-    # exp_folder.mkdir(parents=True, exist_ok=True)
-
-    # model_name = model
-    # model_name += f"-{model}-{dataset}"
-    # save_path = os.path.join(os.getcwd(), 'save_finetuned', model_name)
-    # if save_path:
-    #     os.makedirs(save_path, exist_ok=True)
-
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     logger.info(f"on device {str(device)}")
     logger.info(f"Random seed ('torch.manual_seed'): {seed}")
-    print('The seed is,', seed)
+    print('The seed is ', seed)
     torch.manual_seed(seed)
 
     # training setup
@@ -115,6 +89,13 @@ def main(
                                                          batch_size_train,
                                                          batch_size_eval,
                                                          subset=data_proportion)
+
+    # Number of datapoints
+    data_number = len(train_loader.sampler)
+    logger.debug(f"number of data points: {data_number}")
+
+    # The max is a hack to have the pytest pass and run fast
+    pseudo_matrix_data_number = max(1,int(data_number * pseudo_matrix_data_proportion))
 
     # Some params for CIFAR:
     BATCH_NORM = False
@@ -176,32 +157,12 @@ def main(
     if weight_file is not None:
         logger.info(f"Loading weights from {str(weight_file)}")
         if Path(weight_file).suffix == ".pth":
-            print('we want to be here!')
-            # model_dict = net.state_dict()
-            # print("loading pretrained weights . . .")
-            # state_dict = torch.load(weight_file, map_location="cpu")
-            # model_state_dict = state_dict['model_state_dict']
-            # for key, value in state_dict.items():
-            #     print('The keys are')
-            #     print(key, value)
-            # checkpoint_key = 'student'
-            # if checkpoint_key is not None and checkpoint_key in state_dict:
-            #     print(f"Take key {checkpoint_key} in provided checkpoint dict")
-            #     state_dict = state_dict[checkpoint_key]
-            # # remove `module.` prefix
-            # state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
-            # # remove `backbone.` prefix induced by multicrop wrapper
-            # state_dict = {k.replace("backbone.", ""): v for k, v in state_dict.items()}
-            # state_dict = {k: v if v.size() == model_dict[k].size() else model_dict[k] for k, v in
-            #               zip(model_dict.keys(), state_dict.values())}
-            # # model.load_state_dict(state_dict, strict=False)
-            # net.load_state_dict(state_dict, strict=False)
-            # net.load_state_dict(torch.load(str(weight_file)))
             if torch.cuda.is_available():
+                logger.warning("Loading weights on GPU")
                 net.load_state_dict(torch.load(weight_file))
             else:
-                net.load_state_dict(torch.load(weight_file), map_location="cpu")
-            # model.load_state_dict(torch.load(PATH))
+                logger.warning("Loading weights on CPU")
+                net.load_state_dict(torch.load(weight_file), map_location=torch.device("cpu"))
         elif Path(weight_file).suffix == ".pyT":
             net = torch.load(str(weight_file))
         else:
@@ -217,8 +178,7 @@ def main(
 
     # Try to get the LabelSmoothingCrossEntropy to work
     if model == 'vit':
-        print('we are here')
-        print('Adding special loss')
+
         # crit = LabelSmoothingCrossEntropy()
         crit = nn.CrossEntropyLoss(weight=None, size_average=None,
                           ignore_index=- 100, reduce=None,
@@ -326,34 +286,6 @@ def main(
             net.eval()
 
             # TODO: clean this
-            # we need to save the weights we have converged to so that it is easy to finetune
-            checkpoint_name = 'checkpoint_trial'
-            # add the training and test accuracy value at the checkpoint
-            # checkpoint_name += f"-{round(tr_hist[1], 3)}-{round(te_hist[1], 3)}"
-            # weights_path = save_folder / "converged_weights.npy"
-            #TODO: get the saving to work with the exp_folder path
-            # weights_path = exp_folder / "converged_weights.pth"
-            # print('dm_path', weights_path)
-            # logger.info(f"Print path to saved weights", weights_path)
-            # torch.save({
-            #     'model_state_dict': net.state_dict(),
-            #     'epoch': iterations,
-            #     # 'optimizer_state_dict': optimizer.state_dict(),
-            #     # 'scheduler': scheduler.state_dict(),
-            # },
-            #     os.path.join(save_path, 'checkpoint_trial_further.pth')
-            #     # weights_path
-            # )
-
-            # weights_history.append(get_weights(net))
-
-            # It might be a good idea to save the weights at this point
-            # Saving weights if specified
-
-            # if save_weights_file is not None:
-            #     logger.info(f"Saving last weights in {str(save_weights_file)}")
-            #     torch.save(net.state_dict(), str(save_weights_file))
-            #     exp_dict["saved_weights"] = str(save_weights_file)
 
             if compute_dimensions:
                 # it fails at this line:

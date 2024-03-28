@@ -153,7 +153,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str, default=str(datetime.datetime.now()).replace(" ", "_").replace(":", "_").split(".")[0])
     parser.add_argument('--mode', type=str, default="euler_slurm")
-    parser.add_argument('--long', type=int, default=0)
+    parser.add_argument('--long', type=int, default=0) # Whether we do the long or the short simulation
+    # Currently short is 8 hours and long is 24 hours
 
     parser.add_argument('--num_cpus', type=int, default=20)
     parser.add_argument('--num_gpus', type=int, default=3)

@@ -18,7 +18,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULT_DIR = "./final_results"
 
 LONG = 23
-SHORT = 3
+SHORT = 7
 
 
 class AsyncExecutor:
