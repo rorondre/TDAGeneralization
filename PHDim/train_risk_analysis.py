@@ -1,18 +1,30 @@
 from collections import deque
 from pathlib import Path
+import os
+import datetime
+import json
 
 import numpy as np
 import torch
 import torch.nn as nn
-import wandb
 from loguru import logger
 
-from models import alexnet, fc_mnist, vgg, fc_cifar, lenet
+from models import alexnet, fc_mnist, vgg, fc_cifar, lenet, vit
+from models.build_model import create_model
+
+from models.vit import VisionTransformer
+from functools import partial
+
 from models.vgg import vgg as make_vgg
 from topology import fast_ripser
-from utils import accuracy
+from utils import accuracy, LabelSmoothingCrossEntropy
 from PHDim.dataset import get_data_simple
 from PHDim.eval import eval, recover_eval_tensors, eval_on_tensors
+
+from sklearn.metrics.pairwise import pairwise_distances
+
+# from utils import LabelSmoothingCrossEntropy
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:21"
 
 
 class UnknownWeightFormatError(BaseException):
@@ -29,14 +41,15 @@ def get_weights(net):
         return torch.cat(w).cpu().numpy()
 
 
-def main(iterations: int = 10000000,
+def main(
+        iterations: int = 10000,
          batch_size_train: int = 100,
-         batch_size_eval: int = 1000,
+         batch_size_eval: int = 100,
          lr: float = 1.e-1,
          eval_freq: int = 1000,
-         dataset: str = "mnist",
+         dataset: str = "cifar10",
          data_path: str = "~/data/",
-         model: str = "fc",
+         model: str = "vit",
          save_folder: str = "results",
          depth: int = 5,
          width: int = 50,
@@ -44,12 +57,17 @@ def main(iterations: int = 10000000,
          min_points: int = 200,
          seed: int = 42,
          save_weights_file: str = None,
+         save_distance_matrix_file: str = None,
          compute_dimensions: bool = True,
-         weight_file: str = None,
-         ripser_points: int = 1000,
+         weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_could_be_it.pth',
+         ripser_points: int = 500,
          jump: int = 20,
          additional_dimensions: bool = False,
-         data_proportion: float = 1.):
+         data_proportion: float = 1.,
+         proportion_eval: int = 500,
+         id_lr: int = 0,
+         pseudo_matrix_data_proportion: float = 0.01):
+
 
     # Creating files to save results
     save_folder = Path(save_folder)
@@ -58,6 +76,7 @@ def main(iterations: int = 10000000,
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     logger.info(f"on device {str(device)}")
     logger.info(f"Random seed ('torch.manual_seed'): {seed}")
+    print('The seed is ', seed)
     torch.manual_seed(seed)
 
     # training setup
@@ -70,12 +89,19 @@ def main(iterations: int = 10000000,
                                                          batch_size_eval,
                                                          subset=data_proportion)
 
+    # Number of datapoints
+    data_number = len(train_loader.sampler)
+    logger.debug(f"number of data points: {data_number}")
+
+    # The max is a hack to have the pytest pass and run fast
+    pseudo_matrix_data_number = max(1,int(data_number * pseudo_matrix_data_proportion))
+
     # Some params for CIFAR:
     BATCH_NORM = False
     SCALE = 64
 
     # TODO: use the args here
-    if model not in ["fc", "alexnet", "vgg", "lenet"]:
+    if model not in ["fc", "alexnet", "vgg", "lenet", "vit"]:
         raise NotImplementedError(f"Model {model} not implemented, should be in ['fc', 'alexnet', 'vgg']")
     if model == 'fc':
         if dataset == 'mnist':
@@ -95,24 +121,76 @@ def main(iterations: int = 10000000,
             net = lenet(input_channels=1, height=28, width=28).to(device)
         else:
             net = lenet().to(device)
+    elif model == "vit":
+        if dataset == 'cifar10':
+
+            # Specific parameters for vit and Cifar10 -- to be added to args
+            n_classes = 10
+            img_size = 32
+            # default values, this can be done in a better way
+            vit_mlp_ratio = 2 # MLP layers in the transformer encoder'
+            sd = 0.1 #rate of stochastic depth
+            # model = create_model(img_size, n_classes)
+            patch_size = 4 if img_size == 32 else 8  # 4 if img_size = 32 else 8: patch size for ViT
+            net = VisionTransformer(img_size=[img_size],
+                                      patch_size=patch_size,
+                                      in_chans=3,
+                                      num_classes=n_classes,
+                                      embed_dim=192,
+                                      depth=9,
+                                      num_heads=12,
+                                      mlp_ratio=vit_mlp_ratio,
+                                      qkv_bias=True,
+                                      drop_path_rate=sd,
+                                      norm_layer=partial(nn.LayerNorm, eps=1e-6)).to(device)
+
+        else:
+            raise NotImplementedError("Only CIFAR10 is supported with VIT for now.")
 
     logger.info("Network: ")
     print(net)
+    n_parameters = sum(p.numel() for p in net.parameters() if p.requires_grad)
+    logger.info("Number of params: ")
+    print(n_parameters)
 
     if weight_file is not None:
         logger.info(f"Loading weights from {str(weight_file)}")
-
         if Path(weight_file).suffix == ".pth":
-            net.load_state_dict(torch.load(str(weight_file)))
+            if torch.cuda.is_available():
+                logger.warning("Loading weights on GPU")
+                net.load_state_dict(torch.load(weight_file))
+            else:
+                logger.warning("Loading weights on CPU")
+                net.load_state_dict(torch.load(weight_file), map_location=torch.device("cpu"))
         elif Path(weight_file).suffix == ".pyT":
             net = torch.load(str(weight_file))
         else:
             raise UnknownWeightFormatError(f"Extension {Path(weight_file).suffix} unknown")
 
     net = net.to(device)
+    crit = nn.CrossEntropyLoss(weight=None, size_average=None,
+                               ignore_index=- 100, reduce=None,
+                               reduction='mean', label_smoothing=0.1).to(device)
+    crit_unreduced = nn.CrossEntropyLoss(weight=None, size_average=None,
+                                         ignore_index=- 100, reduce=None,
+                                         reduction='none', label_smoothing=0.1).to(device)
 
-    crit = nn.CrossEntropyLoss().to(device)
-    crit_unreduced = nn.CrossEntropyLoss(reduction="none").to(device)
+    # Try to get the LabelSmoothingCrossEntropy to work
+    if model == 'vit':
+
+        # crit = LabelSmoothingCrossEntropy()
+        crit = nn.CrossEntropyLoss(weight=None, size_average=None,
+                          ignore_index=- 100, reduce=None,
+                          reduction='mean', label_smoothing=0.1).to(device)
+        crit_unreduced = nn.CrossEntropyLoss(weight=None, size_average=None,
+                          ignore_index=- 100, reduce=None,
+                          reduction='none', label_smoothing=0.1).to(device)
+
+    else:
+        crit = nn.CrossEntropyLoss().to(device)
+        crit_unreduced = nn.CrossEntropyLoss(reduction="none").to(device)
+
+
 
     def cycle_loader(dataloader):
         while 1:
@@ -136,7 +214,7 @@ def main(iterations: int = 10000000,
     exp_dict = {}
 
     # weights
-    weights_history = deque([])
+    # weights_history = deque([])
     loss_history = deque([])
 
     STOP = False  # Do we have enough point for persistent homology
@@ -154,7 +232,7 @@ def main(iterations: int = 10000000,
         # Sequentially running evaluation step
         # first record is at the initial point
         if i % eval_freq == 0 and (not CONVERGED):
-
+            net.eval()
             # Evaluation on validation set
             logger.info(f"Evaluation at iteration {i}")
             te_hist, *_ = eval(test_loader_eval, net, crit_unreduced, opt)
@@ -203,29 +281,39 @@ def main(iterations: int = 10000000,
                 STOP=True
 
         if CONVERGED:
-            weights_history.append(get_weights(net))
+            # we are reaching here
+            net.eval()
+
+            # TODO: clean this
 
             if compute_dimensions:
-                tr_hist, losses, _ = eval_on_tensors(eval_x, eval_y, net, crit_unreduced)
+                # it fails at this line:
+                # clear cache
+                torch.cuda.empty_cache()
+                proportion_eval_x = eval_x[:pseudo_matrix_data_number,...]
+                proportion_eval_y = eval_y[:pseudo_matrix_data_number,...]
+
+                tr_hist, losses, _ = eval_on_tensors(proportion_eval_x, proportion_eval_y, net, crit_unreduced)
+                # tr_hist, losses, _ = eval(train_loader_eval, net, crit_unreduced, opt)
                 evaluation_history_TRAIN.append([i, *tr_hist])
                 loss_history.append(losses.cpu())
 
             # Validation history
-            te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
-
+            #te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
+            te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
         # clear cache
         torch.cuda.empty_cache()
 
-        if (len(weights_history) >= ripser_points) and compute_dimensions:
+        if (len(loss_history) >= ripser_points) and compute_dimensions:
             STOP = True
-            weights_history.popleft()
-            loss_history.popleft()
+            # weights_history.popleft()
+            # loss_history.popleft()
 
         # final evaluation and saving results
         if STOP and CONVERGED:
 
             # if no convergence, we don't record
-            if len(weights_history) < ripser_points - 1:
+            if len(loss_history) < ripser_points - 1:
                 logger.warning("Experiment did not converge")
                 break
 
@@ -238,59 +326,32 @@ def main(iterations: int = 10000000,
             evaluation_history_TRAIN.append([i + 1, *tr_hist])
 
             # Turn collected iterates (both weights and losses) into numpy arrays
-            if compute_dimensions:
-                weights_history_np = np.stack(tuple(weights_history))
-                del weights_history
+            # if compute_dimensions:
+            #     weights_history_np = np.stack(tuple(weights_history))
+            #     del weights_history
 
             loss_history_np = torch.stack(tuple(loss_history)).cpu().numpy()
+  
 
-            # jump_size is a parameter of the persistent homology part
-            # Ijump defines how many finite set are drawn to perform the affine regression
-            jump_size = int((ripser_points - min_points) / jump)
+            metric = 'euclidean'
+            metric_pseudo = 'manhattan'
+            # w = weights_history_np
+            w_pseudo = loss_history_np
 
-            subset_dim_dict = {}
-            if compute_dimensions:
+            # dm = pairwise_distances(w, metric=metric)
 
-                logger.info("Computing euclidean PH dim...")
-                ph_dim_euclidean = fast_ripser(weights_history_np,
-                                               max_points=ripser_points,
-                                               min_points=min_points,
-                                               point_jump=jump_size)
+            pseudo_distance_matrix = pairwise_distances(w_pseudo, metric=metric_pseudo)
 
-                logger.info("Computing L1 losses based PH dim...")
-                ph_dim_losses_based = fast_ripser(loss_history_np,
-                                                  max_points=ripser_points,
-                                                  min_points=min_points,
-                                                  point_jump=jump_size,
-                                                  metric="manhattan")
+            # np.array(pseudo_distance_matrix)
 
-                if additional_dimensions:
-                    logger.info("Computing additional dimensions...")
-                    # Two of them: validation set and subset of training set
-
-                    PERCENTAGES = [2, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-
-                    for ph_perc in PERCENTAGES:
-                        n_ph = int(loss_history_np.shape[1] * ph_perc / 100.)
-                        ph_dim_subset_based = fast_ripser(loss_history_np[..., :n_ph],
-                                                          max_points=ripser_points,
-                                                          min_points=min_points,
-                                                          point_jump=jump_size,
-                                                          metric="manhattan")
-                        subset_dim_dict.update({
-                            f"ph_dim_subset_based_{ph_perc}": ph_dim_subset_based
-                        })
-
-            else:
-                ph_dim_euclidean = "non_computed"
-                ph_dim_losses_based = "non_computed"
+            # dm_path_folder = exp_folder / 'distance_matrix_folder'
+            # dm_path_folder.mkdir(parents=True, exist_ok=True)
+            # TODO: make this work with dm_path_folder
 
             test_acc = evaluation_history_TEST[-1][2]
             train_acc = evaluation_history_TRAIN[-1][2]
 
             exp_dict = {
-                "ph_dim_euclidean": ph_dim_euclidean,
-                "ph_dim_losses_based": ph_dim_losses_based,
                 "train_acc": train_acc,
                 "eval_acc": test_acc,
                 "acc_gap": train_acc - test_acc,
@@ -303,16 +364,35 @@ def main(iterations: int = 10000000,
                 "width": width,
                 "model": model,
                 "last_losses": f"outputs_loss_{lr}_{batch_size_train}.npy",
-                "iterations": i
+                "iterations": i,
+
             }
-            exp_dict.update(subset_dim_dict)
+
+            if save_distance_matrix_file is not None:
+                logger.info(f"Saving pseudo distance matrix in {str(save_distance_matrix_file)}")
+                np.save(str(save_distance_matrix_file), pseudo_distance_matrix)
+                exp_dict["saved_distance_matrix"] = str(save_distance_matrix_file)
 
             break
 
-        # Saving weights if specified
-        if save_weights_file is not None:
-            logger.info(f"Saving last weights in {str(save_weights_file)}")
-            torch.save(net.state_dict(), str(save_weights_file))
-            exp_dict["saved_weights"] = str(save_weights_file)
+    # Saving weights if specified
+    if save_weights_file is not None:
+        torch.save({
+                'model_state_dict': net.state_dict(),
+                'epoch': iterations,
+            },
+                str(save_weights_file)
+            )
+        logger.info(f"Saved last weights in {str(save_weights_file)}")
+        # torch.save(net.state_dict(), str(save_weights_file))
+        exp_dict["saved_weights"] = str(save_weights_file)
+
+    # Saving Exp_dict
+    exp_dict_path = save_folder / f"exp_lr_{id_lr}_bs_{batch_size_train}.json"
+    with open(str(exp_dict_path), 'w') as exp_dict_file:
+        json.dump(exp_dict, exp_dict_file, indent=2)
 
     return exp_dict
+
+if __name__ == '__main__':
+    main()

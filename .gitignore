@@ -1,0 +1,26 @@
+
+# Parallel scripts
+# launcher_parallel.py
+# experiment_utils.py
+# run_exp.py
+# util.py
+
+# pycache
+**/__pychache__/*
+*/__pychache__/*
+**.pyc
+
+save_finetuned/
+
+tests_directory/
+
+*.err*
+*.out*
+
+*.pth
+weights/
+
+**.png
+
+final_results
+final_results/*

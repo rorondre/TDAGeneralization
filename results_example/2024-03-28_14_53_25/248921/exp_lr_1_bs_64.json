@@ -1,0 +1,17 @@
+{
+  "train_acc": 9.375,
+  "eval_acc": 10.0,
+  "acc_gap": -0.625,
+  "loss_gap": -6.8502349853515625,
+  "test_loss": 140.414794921875,
+  "learning_rate": 0.00010000000000000009,
+  "batch_size": 64,
+  "LB_ratio": 1.5625000000000013e-06,
+  "depth": 2,
+  "width": 10,
+  "model": "fc",
+  "last_losses": "outputs_loss_0.00010000000000000009_64.npy",
+  "iterations": 7,
+  "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_3.npy",
+  "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_3.pth"
+}

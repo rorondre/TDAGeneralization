@@ -1,6 +1,7 @@
 import json
 import tempfile
 from pathlib import Path
+import numpy as np
 
 from models.fc import fc_mnist
 from PHDim.__main__ import AnalysisOptions
@@ -50,28 +51,32 @@ class WeightsUncorrectlySaved(BaseException):
     ...
 
 
+RIPSER_POINTS=10
+
 def test_train_risk_analysis():
 
     with tempfile.TemporaryDirectory() as output_dir:
 
-        options = AnalysisOptions(iterations=20,
+        options = AnalysisOptions(iterations=3,
                                   data_proportion=0.001,
                                   dataset="mnist",
+                                  model='fc',
                                   save_folder=output_dir,
                                   min_points=1,
                                   num_exp_bs=1,
                                   num_exp_lr=2,
                                   depth=2,
                                   width=10,
-                                  bs_min=2,
+                                  bs_min=1,
                                   bs_max=4,
                                   batch_size_eval=2,
                                   log_weights=True,
-                                  compute_dimensions=False,
+                                  compute_dimensions=True,
                                   project_name="pytest",
-                                  ripser_points=10,
+                                  ripser_points=RIPSER_POINTS,
                                   jump=5,
-                                  resize=8)
+                                  resize=8,
+                                  initial_weights=None)
 
         exp_folder = options()
 
@@ -108,3 +113,14 @@ def test_train_risk_analysis():
         for exp_num in [0, 1]:
             if not (weights_dir / f"weights_{exp_num}.pth").exists():
                 raise FileNotCreatedError(f"Weights file weights_{exp_num}.pth not created")
+
+
+        # Test that the distance matrix folder has been created
+        for exp_num in [0, 1]:
+            dist_matrix_file_path = exp_folder / "distance_matrices" / f"dist_matrix_{exp_num}.npy"
+            dist_matrix = np.load(dist_matrix_file_path)
+            assert dist_matrix.shape[0] == RIPSER_POINTS, dist_matrix.shape
+            assert dist_matrix.shape[1] == RIPSER_POINTS, dist_matrix.shape
+            assert dist_matrix.ndim == 2, dist_matrix.shape
+        
+
