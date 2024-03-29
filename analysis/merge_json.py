@@ -14,7 +14,7 @@ def merge_json(result_dir: str):
     assert result_dir.is_dir(), str(result_dir)
 
     # We create one json file for each seed
-    seed_dir_list = [seed for seed in result_dir.glob("*") if seed.is_dir()]
+    seed_dir_list = [seed for seed in result_dir.glob("*") if seed.is_dir() and "figure" not in seed.stem]
     logger.info(f"Found experiments for {len(seed_dir_list)} seeds")
 
     final_results = {}

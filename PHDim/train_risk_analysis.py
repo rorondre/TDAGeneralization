@@ -365,7 +365,7 @@ def main(
                 "model": model,
                 "last_losses": f"outputs_loss_{lr}_{batch_size_train}.npy",
                 "iterations": i,
-
+                "dataset": dataset
             }
 
             if save_distance_matrix_file is not None:

@@ -194,7 +194,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_file', type=int, default=1)  # Initial weights
     parser.add_argument('--ripser_points', type=int, default=5000)
     parser.add_argument('--data_proportion', type=float, default=1.)
-    parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.01)
+    parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.1)
     
     
     # Unused arguments, needing to be implemented or removed
