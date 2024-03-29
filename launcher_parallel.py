@@ -136,7 +136,7 @@ def main(args_):
 
 """
 Test Commmand
-PYTHONPATH=$PWD python launcher_parallel.py --num_gpus 0 --n_lr 2 --n_bs 2 --depth 0 --result_dir tests_directory --num_seeds_per_hparam 2 --dataset mnist --model fc --depth 2 --width 10 --iterations 2 --ripser_points 5 --min_points 3 --weight_file 0 --data_proportion 0.001 --n_lr 2 --n_bs 2 --bs_max 64 --bs_min 32
+PYTHONPATH=$PWD python launcher_parallel.py --num_gpus 0 --num_cpus 2 --n_lr 2 --n_bs 2 --depth 0 --result_dir tests_directory --num_seeds_per_hparam 2 --dataset mnist --model fc --depth 2 --width 10 --iterations 2 --ripser_points 5 --min_points 3 --weight_file 0 --data_proportion 0.001 --n_lr 2 --n_bs 2 --bs_max 64 --bs_min 32
 """
 
 """
