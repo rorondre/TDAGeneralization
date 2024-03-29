@@ -11,7 +11,24 @@ from tqdm import tqdm
 
 # Stupid function in place of the real one that Rayna is implementing
 def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
-    return np.random.rand()
+    # this is a naive implementation, it can be improved
+    if dist_matrix.shape[0] >= 1000:
+        inv_fn = np.linalg.pinv
+    else:
+        inv_fn = np.linalg.inv
+    try:
+        Z = inv_fn(np.exp(-t * dist_matrix))
+    except Exception as e:
+        print(f'Exception: {e} for t: {t} perturbing matrix')
+        D = (
+                np.exp(-t * dist_matrix)
+                +
+                0.01 * np.identity(
+            n=dist_matrix.shape[0]
+        )  # perturb similarity mtx to invert
+        )
+        Z = inv_fn(D)
+    return Z.sum(axis=1)
 
 
 def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None):

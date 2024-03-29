@@ -7,11 +7,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from loguru import logger
 from tqdm import tqdm
+from gph.python import ripser_parallel
 
 
 # Stupid function in place of the real one that Rayna is implementing
-def E_alpha(dist_matrix: np.ndarray, alpha: float = 1.) -> float:
-    return np.random.rand()
+def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 1.) -> float:
+    diagrams = ripser_parallel(dist_matrix, maxdim=0, n_threads=-1, metric="precomputed")['dgms']
+    d = diagrams[h_dim]
+    d = d[d[:, 1] < np.inf]
+    alpha_sum = np.power((d[:, 1] - d[:, 0]), alpha).sum()
+    return alpha_sum
 
 
 def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None):
