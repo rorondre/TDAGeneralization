@@ -6,11 +6,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from loguru import logger
+from scipy.linalg import cho_factor, solve_triangular, solve
 from tqdm import tqdm
 
 
 # Stupid function in place of the real one that Rayna is implementing
-def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
+def magnitude_slow(dist_matrix: np.ndarray, t: float = 1.) -> float:
     # this is a naive implementation, it can be improved
     if dist_matrix.shape[0] >= 1000:
         inv_fn = np.linalg.pinv
@@ -29,6 +30,17 @@ def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
         )
         Z = inv_fn(D)
     return Z.sum()
+
+
+def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
+
+    M = np.exp(-dist_matrix)
+    c, lower = cho_factor(M)
+    x = solve_triangular(c, np.ones(M.shape[0]), trans=1)
+
+    return x.T @ x
+
+
 
 
 def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None):
