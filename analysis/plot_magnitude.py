@@ -6,8 +6,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from loguru import logger
-from scipy.linalg import cho_factor, solve_triangular, solve
+from scipy.linalg import cho_factor, solve_triangular, solve 
 from tqdm import tqdm
+from krypy.linsys import LinearSystem, Cg
 
 
 # Stupid function in place of the real one that Rayna is implementing
@@ -32,13 +33,25 @@ def magnitude_slow(dist_matrix: np.ndarray, t: float = 1.) -> float:
     return Z.sum()
 
 
-def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
+def magnitude_cloesky(dist_matrix: np.ndarray, t: float = 1.) -> float:
 
     M = np.exp(-dist_matrix)
     c, lower = cho_factor(M)
     x = solve_triangular(c, np.ones(M.shape[0]), trans=1)
 
     return x.T @ x
+
+def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
+
+    # from the PhD thesis of Salim, Shilan (2021)
+    N=dist_matrix.shape[0]
+    w = np.ones(N)/N
+    linear_system = LinearSystem(np.exp(-dist_matrix), np.ones(N), self_adjoint = True, positive_definite = True)
+    w = Cg(linear_system,  x0 = w).xk
+    magnitude_weights = w.squeeze()
+    logger.debug(magnitude_weights.shape)
+    return magnitude_weights.sum()
+
 
 
 
