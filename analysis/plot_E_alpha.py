@@ -56,6 +56,8 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None):
         norm=matplotlib.colors.LogNorm()
     )
 
+    ax.yscale("log")
+
     plt.xlabel("Generalization error", weight="bold")
     plt.ylabel(r"$\mathbf{E_\alpha}$", weight="bold")
     plt.grid()

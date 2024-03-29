@@ -28,7 +28,7 @@ def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
         )  # perturb similarity mtx to invert
         )
         Z = inv_fn(D)
-    return Z.sum(axis=1)
+    return Z.sum()
 
 
 def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None):
