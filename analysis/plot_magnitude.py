@@ -41,15 +41,15 @@ def magnitude_cloesky(dist_matrix: np.ndarray, t: float = 1.) -> float:
 
     return x.T @ x
 
-def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
+def magnitude(dist_matrix: np.ndarray, t: float = 35.) -> float:
 
     # from the PhD thesis of Salim, Shilan (2021)
     N=dist_matrix.shape[0]
     w = np.ones(N)/N
-    linear_system = LinearSystem(np.exp(-dist_matrix), np.ones(N), self_adjoint = True, positive_definite = True)
+    linear_system = LinearSystem(np.exp(-t * dist_matrix), np.ones(N), self_adjoint = True, positive_definite = True)
     w = Cg(linear_system,  x0 = w).xk
     magnitude_weights = w.squeeze()
-    logger.debug(magnitude_weights.shape)
+
     return magnitude_weights.sum()
 
 
@@ -80,7 +80,7 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None):
         magnitude_tab.append(magnitude(dist_matrix))
 
     # TODO: make the markers vary with the batch size
-    markers = "x"
+    markers = "o"
 
     color_map = plt.cm.get_cmap('viridis_r')
 
@@ -93,8 +93,10 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None):
         norm=matplotlib.colors.LogNorm()
     )
 
+    ax.set_yscale("log")
+
     plt.xlabel("Generalization error", weight="bold")
-    plt.ylabel(r"$\mathbf{E_\alpha}$", weight="bold")
+    plt.ylabel("Magnitude", weight="bold")
     plt.grid()
     
     if output_dir is not None:
@@ -152,7 +154,8 @@ def plot_magnitude_all_seed(json_path: str):
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "magnitude_vs_generealization_error.png"
 
-    plt.grid()
+    ax.grid(visible=True, which="minor")
+    plt.grid(visible=True, which="minor")
 
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")

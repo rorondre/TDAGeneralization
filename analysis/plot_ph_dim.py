@@ -15,11 +15,11 @@ from analysis.plot_E_alpha import E_alpha
 # Stupid function in place of the real one that Rayna is implementing
 def ph_dim(dist_matrix: np.ndarray,
            min_points=200,
-           max_points=1000,
-           point_jump=50,
+           max_points=3000,
+           point_jump=100,
            h_dim=0,
            seed: int = 42,
-           alpha: float = 1.) -> float:
+           alpha: float = 0.5) -> float:
     """
     This function:
      - takes as an input a distance matrix
@@ -39,8 +39,8 @@ def ph_dim(dist_matrix: np.ndarray,
 
         sample_indices = np.random.choice(dist_matrix.shape[0], points_number, replace=True)
         dist_matrix = dist_matrix[sample_indices, :][:, sample_indices]
-        alpha_sum = E_alpha(dist_matrix, h_dim=0, alpha=1.0)
-        lengths.append(np.power(alpha_sum))
+        alpha_sum = E_alpha(dist_matrix, h_dim=0, alpha=alpha)
+        lengths.append(alpha_sum)
 
     lengths = np.array(lengths)
 

@@ -11,7 +11,7 @@ from gph.python import ripser_parallel
 
 
 # Stupid function in place of the real one that Rayna is implementing
-def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 1.) -> float:
+def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 0.5) -> float:
     diagrams = ripser_parallel(dist_matrix, maxdim=0, n_threads=-1, metric="precomputed")['dgms']
     d = diagrams[h_dim]
     d = d[d[:, 1] < np.inf]
@@ -43,7 +43,7 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None):
         E_alpha_tab.append(E_alpha(dist_matrix))
 
     # TODO: make the markers vary with the batch size
-    markers = "x"
+    markers = "o"
 
     color_map = plt.cm.get_cmap('viridis_r')
 
@@ -56,7 +56,7 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None):
         norm=matplotlib.colors.LogNorm()
     )
 
-    ax.yscale("log")
+    ax.set_yscale("log")
 
     plt.xlabel("Generalization error", weight="bold")
     plt.ylabel(r"$\mathbf{E_\alpha}$", weight="bold")
@@ -117,7 +117,8 @@ def plot_E_alpha_all_seed(json_path: str):
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "E_alpha_vs_generealization_error.png"
 
-    plt.grid()
+    ax.grid(visible=True, which="minor")
+    plt.grid(visible=True, which="minor")
 
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")
