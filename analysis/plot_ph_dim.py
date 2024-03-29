@@ -19,7 +19,7 @@ def ph_dim(dist_matrix: np.ndarray,
            point_jump=100,
            h_dim=0,
            seed: int = 42,
-           alpha: float = 0.5) -> float:
+           alpha: float = 1.) -> float:
     """
     This function:
      - takes as an input a distance matrix

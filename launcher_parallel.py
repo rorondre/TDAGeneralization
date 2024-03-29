@@ -166,8 +166,8 @@ if __name__ == '__main__':
 
     # Variation of learning rate and batch size --> GRID
     parser.add_argument('--lr_min', type=float, default=1.e-6)
-    parser.add_argument('--lr_max', type=float, default=1.e-4)
-    parser.add_argument('--bs_min', type=int, default=64)
+    parser.add_argument('--lr_max', type=float, default=1.e-3)
+    parser.add_argument('--bs_min', type=int, default=32)
     parser.add_argument('--bs_max', type=int, default=512)
     parser.add_argument('--n_lr', type=int, default=4)
     parser.add_argument('--n_bs', type=int, default=4)
