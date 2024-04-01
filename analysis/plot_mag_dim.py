@@ -12,6 +12,8 @@ from scipy import optimize
 from scipy.stats import linregress
 
 from analysis.plot_magnitude import magnitude
+from analysis.kendall import granulated_kendall_from_dict
+
 
 # helper functions
 def func(x, a, b):
@@ -75,6 +77,8 @@ def plot_mag_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
     lr_tab = []
     bs_tab = []
 
+    complexity_key = "magnitude_dimension"
+
     for key in tqdm(seed_results.keys()):
 
         acc_gap_tab.append(seed_results[key]['acc_gap'])
@@ -86,10 +90,14 @@ def plot_mag_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
             raise FileNotFoundError(str(dist_matrix_path))
 
         dist_matrix = np.load(str(dist_matrix_path))
-        mag_dim_tab.append(mag_dim(dist_matrix))
+
+        complexity = mag_dim(dist_matrix, alpha=alpha)
+        mag_dim_tab.append(complexity)
+
+        seed_results[key][complexity_key] = complexity
 
     # TODO: make the markers vary with the batch size
-    markers = "x"
+    markers = "o"
 
     color_map = plt.cm.get_cmap('viridis_r')
 
@@ -112,7 +120,12 @@ def plot_mag_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
         plt.savefig(str(save_path))
         logger.info(f"Saving figure in {str(save_path)}")
 
-    return sc
+    granulated_kendalls = granulated_kendall_from_dict(
+        seed_results,
+        complexity_keys=[complexity_key]
+    )
+
+    return sc, granulated_kendalls
 
 
 def plot_mag_dim_one_seed_from_json(json_path: str):
@@ -129,7 +142,7 @@ def plot_mag_dim_one_seed_from_json(json_path: str):
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    sc = plot_mag_dim_one_seed(results, ax, str(output_dir), save=True)
+    sc, _ = plot_mag_dim_one_seed(results, ax, str(output_dir), save=True)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -150,7 +163,7 @@ def plot_mag_dim_all_seed(json_path: str):
     ax = plt.axes()
 
     for seed in results.keys():
-        sc = plot_mag_dim_one_seed(results[seed], ax, output_dir=None)
+        sc, granulated_kendalls = plot_mag_dim_one_seed(results[seed], ax, output_dir=None)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -160,11 +173,16 @@ def plot_mag_dim_all_seed(json_path: str):
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "mag_dim_vs_generealization_error.png"
 
-    plt.grid()
+    ax.grid(visible=True, which="minor")
+    plt.grid(visible=True, which="minor")
 
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")
     plt.close()
+
+    json_path = output_dir / "magnitude_dimensions_granulated_kendalls.json"
+    with open(str(json_path), "w") as json_file:
+        json.dump(granulated_kendalls, json_file, indent=2)
 
 
 if __name__ == "__main__":

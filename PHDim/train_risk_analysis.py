@@ -336,17 +336,11 @@ def main(
             metric = 'euclidean'
             metric_pseudo = 'manhattan'
             # w = weights_history_np
-            w_pseudo = loss_history_np
+            # w_pseudo = loss_history_np
 
             # dm = pairwise_distances(w, metric=metric)
 
-            pseudo_distance_matrix = pairwise_distances(w_pseudo, metric=metric_pseudo)
-
-            # np.array(pseudo_distance_matrix)
-
-            # dm_path_folder = exp_folder / 'distance_matrix_folder'
-            # dm_path_folder.mkdir(parents=True, exist_ok=True)
-            # TODO: make this work with dm_path_folder
+            pseudo_distance_matrix = pairwise_distances(loss_history_np, metric=metric_pseudo)
 
             test_acc = evaluation_history_TEST[-1][2]
             train_acc = evaluation_history_TRAIN[-1][2]

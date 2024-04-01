@@ -10,12 +10,13 @@ from tqdm import tqdm
 from gph.python import ripser_parallel
 
 from analysis.plot_E_alpha import E_alpha
+from analysis.kendall import granulated_kendall_from_dict
 
 
 # Stupid function in place of the real one that Rayna is implementing
 def ph_dim(dist_matrix: np.ndarray,
-           min_points=1000,
-           max_points=5000,
+           min_points=200,
+           max_points=2000,
            point_jump=200,
            h_dim=0,
            seed: int = 42,
@@ -32,14 +33,18 @@ def ph_dim(dist_matrix: np.ndarray,
 
     np.random.seed(seed)
 
+    if max_points is None:
+        max_points = dist_matrix.shape[0]
+    assert max_points <= dist_matrix.shape[0], (max_points, dist_matrix.shape[0])
+
     test_n = range(min_points, max_points, point_jump)
     lengths = []
 
     for points_number in test_n:
 
-        sample_indices = np.random.choice(dist_matrix.shape[0], points_number, replace=True)
-        dist_matrix = dist_matrix[sample_indices, :][:, sample_indices]
-        alpha_sum = E_alpha(dist_matrix, h_dim=0, alpha=alpha)
+        sample_indices = np.random.choice(dist_matrix.shape[0], points_number, replace=False)
+        dist_matrix_temp = dist_matrix[sample_indices, :][:, sample_indices]
+        alpha_sum = E_alpha(dist_matrix_temp, h_dim=0, alpha=alpha)
         lengths.append(alpha_sum)
 
     lengths = np.array(lengths)
@@ -66,6 +71,8 @@ def plot_ph_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
     lr_tab = []
     bs_tab = []
 
+    complexity_key = "ph_dim"
+
     for key in tqdm(seed_results.keys()):
 
         acc_gap_tab.append(seed_results[key]['acc_gap'])
@@ -77,10 +84,15 @@ def plot_ph_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
             raise FileNotFoundError(str(dist_matrix_path))
 
         dist_matrix = np.load(str(dist_matrix_path))
+
+        complexity = ph_dim(dist_matrix)
+        ph_dim_tab.append(complexity)
+
+        seed_results[key][complexity_key] = complexity
         ph_dim_tab.append(ph_dim(dist_matrix))
 
     # TODO: make the markers vary with the batch size
-    markers = "x"
+    markers = "o"
 
     color_map = plt.cm.get_cmap('viridis_r')
 
@@ -103,7 +115,12 @@ def plot_ph_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
         plt.savefig(str(save_path))
         logger.info(f"Saving figure in {str(save_path)}")
 
-    return sc
+    granulated_kendalls = granulated_kendall_from_dict(
+        seed_results,
+        complexity_keys=[complexity_key]
+    )
+
+    return sc, granulated_kendalls
 
 
 def plot_ph_dim_one_seed_from_json(json_path: str):
@@ -120,7 +137,7 @@ def plot_ph_dim_one_seed_from_json(json_path: str):
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    sc = plot_ph_dim_one_seed(results, ax, str(output_dir), save=True)
+    sc, _ = plot_ph_dim_one_seed(results, ax, str(output_dir), save=True)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -141,7 +158,7 @@ def plot_ph_dim_all_seed(json_path: str):
     ax = plt.axes()
 
     for seed in results.keys():
-        sc = plot_ph_dim_one_seed(results[seed], ax, output_dir=None)
+        sc, granulated_kendalls = plot_ph_dim_one_seed(results[seed], ax, output_dir=None)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -151,11 +168,16 @@ def plot_ph_dim_all_seed(json_path: str):
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "Ph_dim_vs_generealization_error.png"
 
-    plt.grid()
+    ax.grid(visible=True, which="minor")
+    plt.grid(visible=True, which="minor")
 
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")
     plt.close()
+
+    json_path = output_dir / "ph_dim_granulated_kendalls.json"
+    with open(str(json_path), "w") as json_file:
+        json.dump(granulated_kendalls, json_file, indent=2)
 
 
 if __name__ == "__main__":

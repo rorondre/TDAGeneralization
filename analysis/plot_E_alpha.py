@@ -9,17 +9,21 @@ from loguru import logger
 from tqdm import tqdm
 from gph.python import ripser_parallel
 
+from analysis.kendall import granulated_kendall_from_dict
+
 
 # Stupid function in place of the real one that Rayna is implementing
-def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 0.5) -> float:
+def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 1.) -> float:
+
     diagrams = ripser_parallel(dist_matrix, maxdim=0, n_threads=-1, metric="precomputed")['dgms']
     d = diagrams[h_dim]
     d = d[d[:, 1] < np.inf]
     alpha_sum = np.power((d[:, 1] - d[:, 0]), alpha).sum()
+
     return alpha_sum
 
 
-def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None):
+def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None, alpha: float=1.):
 
     num_exp = len(seed_results.keys())
     logger.info(f"Found {num_exp} experiments")
@@ -28,6 +32,8 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None):
     E_alpha_tab = []
     lr_tab = []
     bs_tab = []
+
+    complexity_key = "E_alpha"
 
     for key in tqdm(seed_results.keys()):
 
@@ -40,7 +46,11 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None):
             raise FileNotFoundError(str(dist_matrix_path))
         
         dist_matrix = np.load(str(dist_matrix_path))
-        E_alpha_tab.append(E_alpha(dist_matrix))
+
+        complexity = E_alpha(dist_matrix, alpha=alpha)
+        E_alpha_tab.append(complexity)
+
+        seed_results[key][complexity_key] = complexity
 
     # TODO: make the markers vary with the batch size
     markers = "o"
@@ -66,8 +76,13 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None):
         save_path = Path(output_dir) / "E_alpha_vs_generealization_error.png"
         plt.savefig(str(save_path))
         logger.info(f"Saving figure in {str(save_path)}")
+
+    granulated_kendalls = granulated_kendall_from_dict(
+        seed_results,
+        complexity_keys=[complexity_key]
+    )
     
-    return sc
+    return sc, granulated_kendalls
 
     
 def plot_E_alpha_one_seed_from_json(json_path: str):
@@ -85,7 +100,7 @@ def plot_E_alpha_one_seed_from_json(json_path: str):
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    sc = plot_E_alpha_one_seed(results, ax, str(output_dir), save=True)
+    sc, _ = plot_E_alpha_one_seed(results, ax, str(output_dir), save=True)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -93,7 +108,7 @@ def plot_E_alpha_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_E_alpha_all_seed(json_path: str):
+def plot_E_alpha_all_seed(json_path: str, alpha: float = 1.):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
@@ -107,7 +122,10 @@ def plot_E_alpha_all_seed(json_path: str):
     ax = plt.axes()
 
     for seed in results.keys():
-        sc = plot_E_alpha_one_seed(results[seed], ax, output_dir=None)
+        sc, granulated_kendalls = plot_E_alpha_one_seed(results[seed],
+                                     ax, 
+                                     output_dir=None,
+                                     alpha=alpha)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -123,6 +141,13 @@ def plot_E_alpha_all_seed(json_path: str):
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")
     plt.close()
+
+    granulated_kendalls["alpha"] = alpha
+
+    json_path = output_dir / "E_alpha_granulated_kendalls.json"
+    with open(str(json_path), "w") as json_file:
+        json.dump(granulated_kendalls, json_file, indent=2)
+
 
 
 if __name__ == "__main__":
