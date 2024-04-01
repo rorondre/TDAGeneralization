@@ -15,6 +15,7 @@ Takeout of first results:
  - ph_dim is not working so far, magnitude and $E_\alpha$ are promising but are we observing really what we want.
 
 TODO
+ - 0. Fix PH dim
  - 1. what is said above
  - 2. non-pseudo quantities: in particular be able to freeze layers
  - 3. new plots: plot mag in terms of t (Rayna), and $E_\alpha$ wrt $\alpha$, kendall   (Ben)
