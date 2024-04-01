@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torch.nn as nn
 from loguru import logger
 from torch.utils.data import Subset
 from torchvision import datasets, transforms
@@ -143,3 +144,36 @@ def get_data(args: DataOptions, subset_percentage: float = None):
     )
 
     return train_loader, test_loader_eval, train_loader_eval, num_classes
+
+
+@torch.no_grad()
+def preprocess_data_from_frozen_net(net: nn.Module, loader: torch.utils.data.DataLoader, shuffle:bool):
+
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    xs = []
+    ys = []
+
+    for (x, y) in loader:
+
+        x, y = x.to(device), y.to(device)
+
+        ys. append(y)
+
+        # HACK: only adapted to VIT
+        xs.append(net(x)[:,0])
+
+    dataset = torch.utils.data.TensorDataset(
+        torch.cat(xs),
+        torch.cat(ys)
+    )
+
+    return torch.utils.data.DataLoader(
+        dataset=dataset,
+        batch_size=loader.batch_size,
+        shuffle=shuffle
+    )
+
+
+
+

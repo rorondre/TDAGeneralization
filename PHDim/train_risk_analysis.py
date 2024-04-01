@@ -18,7 +18,7 @@ from functools import partial
 from models.vgg import vgg as make_vgg
 from topology import fast_ripser
 from utils import accuracy, LabelSmoothingCrossEntropy
-from PHDim.dataset import get_data_simple
+from PHDim.dataset import get_data_simple, preprocess_data_from_frozen_net
 from PHDim.eval import eval, recover_eval_tensors, eval_on_tensors
 
 from sklearn.metrics.pairwise import pairwise_distances
@@ -66,7 +66,9 @@ def main(
          data_proportion: float = 1.,
          proportion_eval: int = 500,
          id_lr: int = 0,
-         pseudo_matrix_data_proportion: float = 0.01):
+         pseudo_matrix_data_proportion: float = 0.01,
+         freeze: bool=False,
+         compute_euclidean_dimension: bool=False):
 
 
     # Creating files to save results
@@ -147,6 +149,7 @@ def main(
         else:
             raise NotImplementedError("Only CIFAR10 is supported with VIT for now.")
 
+
     logger.info("Network: ")
     print(net)
     n_parameters = sum(p.numel() for p in net.parameters() if p.requires_grad)
@@ -168,6 +171,34 @@ def main(
             raise UnknownWeightFormatError(f"Extension {Path(weight_file).suffix} unknown")
 
     net = net.to(device)
+
+    if freeze:
+        logger.info("Freezing all network except head")
+        logger.info("Computing all embeddings...")
+        train_loader = preprocess_data_from_frozen_net(
+            lambda x: net.get_before_head(x),
+            train_loader,
+            shuffle=True
+        )
+        train_loader_eval = preprocess_data_from_frozen_net(
+            lambda x: net.get_before_head(x),
+            train_loader_eval,
+            shuffle=False
+        )
+        test_loader_eval = preprocess_data_from_frozen_net(
+            lambda x: net.get_before_head(x),
+            test_loader_eval,
+            shuffle=False
+        )
+        logger.info("Embedding computed on all dataloaders ✅")
+
+        net = net.head.to(device)
+
+    logger.info("Network: ")
+    print(net)
+    n_parameters = sum(p.numel() for p in net.parameters() if p.requires_grad)
+    logger.info(f"Number of params: {n_parameters}")
+
     crit = nn.CrossEntropyLoss(weight=None, size_average=None,
                                ignore_index=- 100, reduce=None,
                                reduction='mean', label_smoothing=0.1).to(device)
@@ -214,7 +245,7 @@ def main(
     exp_dict = {}
 
     # weights
-    # weights_history = deque([])
+    weights_history = deque([])
     loss_history = deque([])
 
     STOP = False  # Do we have enough point for persistent homology
@@ -296,11 +327,14 @@ def main(
                 tr_hist, losses, _ = eval_on_tensors(proportion_eval_x, proportion_eval_y, net, crit_unreduced)
                 # tr_hist, losses, _ = eval(train_loader_eval, net, crit_unreduced, opt)
                 evaluation_history_TRAIN.append([i, *tr_hist])
-                loss_history.append(losses.cpu())
 
-            # Validation history
+                loss_history.append(losses.cpu())
+                if compute_euclidean_dimension:
+                    weights_history.append(get_weights(net))
+
+            # Validation history --> Useful only if we really compute the worst error, but not for now.
             #te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
-            te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
+            # te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
         # clear cache
         torch.cuda.empty_cache()
 
@@ -326,20 +360,16 @@ def main(
             evaluation_history_TRAIN.append([i + 1, *tr_hist])
 
             # Turn collected iterates (both weights and losses) into numpy arrays
-            # if compute_dimensions:
-            #     weights_history_np = np.stack(tuple(weights_history))
-            #     del weights_history
+            if compute_euclidean_dimension:
+                weights_history_np = np.stack(tuple(weights_history))
+                del weights_history
 
             loss_history_np = torch.stack(tuple(loss_history)).cpu().numpy()
-  
 
             metric = 'euclidean'
             metric_pseudo = 'manhattan'
-            # w = weights_history_np
-            # w_pseudo = loss_history_np
 
-            # dm = pairwise_distances(w, metric=metric)
-
+            distance_matrix_euclidean = pairwise_distances(weights_history_np, metric=metric)
             pseudo_distance_matrix = pairwise_distances(loss_history_np, metric=metric_pseudo)
 
             test_acc = evaluation_history_TEST[-1][2]
@@ -357,15 +387,23 @@ def main(
                 "depth": depth,
                 "width": width,
                 "model": model,
-                "last_losses": f"outputs_loss_{lr}_{batch_size_train}.npy",
                 "iterations": i,
                 "dataset": dataset
             }
 
             if save_distance_matrix_file is not None:
-                logger.info(f"Saving pseudo distance matrix in {str(save_distance_matrix_file)}")
+                logger.info(f"Saving pseudo distance matrix in {str(save_distance_matrix_file)} ✅")
                 np.save(str(save_distance_matrix_file), pseudo_distance_matrix)
                 exp_dict["saved_distance_matrix"] = str(save_distance_matrix_file)
+
+                euclidean_dm_file = (Path(save_distance_matrix_file).parent / \
+                                    (Path(save_distance_matrix_file).stem + "_euclidean")).with_suffix(".npy")
+                logger.info(f"Saving Euclidean distance matrix in {str(save_distance_matrix_file)} ✅")
+                np.save(str(euclidean_dm_file), distance_matrix_euclidean)
+                exp_dict["saved_distance_matrix_euclidean"] = str(euclidean_dm_file)
+
+            else:
+                logger.warning("No distance matrix has been saved")
 
             break
 
@@ -377,9 +415,11 @@ def main(
             },
                 str(save_weights_file)
             )
-        logger.info(f"Saved last weights in {str(save_weights_file)}")
+        logger.info(f"Saved last weights in {str(save_weights_file)} ✅")
         # torch.save(net.state_dict(), str(save_weights_file))
         exp_dict["saved_weights"] = str(save_weights_file)
+    else:
+        logger.warning("Weights are not saved, as specified by arguments.")
 
     # Saving Exp_dict
     exp_dict_path = save_folder / f"exp_lr_{id_lr}_bs_{batch_size_train}.json"
