@@ -14,9 +14,9 @@ from analysis.plot_E_alpha import E_alpha
 
 # Stupid function in place of the real one that Rayna is implementing
 def ph_dim(dist_matrix: np.ndarray,
-           min_points=200,
-           max_points=3000,
-           point_jump=100,
+           min_points=1000,
+           max_points=5000,
+           point_jump=200,
            h_dim=0,
            seed: int = 42,
            alpha: float = 1.) -> float:
