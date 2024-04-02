@@ -185,8 +185,8 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default="cifar10")
     parser.add_argument('--data_path', type=str, default="~/data/")
     parser.add_argument('--model', type=str, default="vit")
-    parser.add_argument('--depth', type=int, default=5)
-    parser.add_argument('--width', type=int, default=50)
+    parser.add_argument('--depth', type=int, default=4)
+    parser.add_argument('--width', type=int, default=100)
     parser.add_argument('--optim', type=str, default="Adam")
     parser.add_argument('--min_points', type=int, default=200)
     parser.add_argument('--save_weights', type=int, default=0)
@@ -197,10 +197,10 @@ if __name__ == '__main__':
     parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=1.)
     parser.add_argument('--freeze', type=int, default=1)
     parser.add_argument('--compute_euclidean_dimension', type=int, default=1)
+    parser.add_argument('--proportion_eval', type=int, default=50000) # proportion to eval the pseudometric, unused at the moment
     
     
     # Unused arguments, needing to be implemented or removed
-    parser.add_argument('--proportion_eval', type=int, default=50000) # proportion to eval the pseudometric, unused at the moment
     parser.add_argument('--jump', type=int, default=1) # unused at the moment
     parser.add_argument('--additional_dimensions', type=int, default=1) # unused at the moment
 

@@ -145,7 +145,7 @@ def plot_magnitude_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_magnitude_all_seed(json_path: str, t:float=35.):
+def plot_magnitude_all_seed(json_path: str, t:float=1.):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)

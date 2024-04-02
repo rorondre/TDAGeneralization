@@ -15,7 +15,7 @@ from analysis.kendall import granulated_kendall_from_dict
 # Stupid function in place of the real one that Rayna is implementing
 def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 1.) -> float:
 
-    diagrams = ripser_parallel(dist_matrix, maxdim=0, n_threads=-1, metric="precomputed")['dgms']
+    diagrams = ripser_parallel(dist_matrix, maxdim=0, n_threads=5, metric="precomputed")['dgms']
     d = diagrams[h_dim]
     d = d[d[:, 1] < np.inf]
     alpha_sum = np.power((d[:, 1] - d[:, 0]), alpha).sum()
@@ -41,7 +41,7 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None, alpha: f
         lr_tab.append(seed_results[key]['learning_rate'])
         bs_tab.append(seed_results[key]['batch_size'])
 
-        dist_matrix_path = Path(seed_results[key]["saved_distance_matrix"])
+        dist_matrix_path = Path(seed_results[key]["saved_distance_matrix_euclidean"])
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
         

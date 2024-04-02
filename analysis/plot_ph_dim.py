@@ -16,7 +16,7 @@ from analysis.kendall import granulated_kendall_from_dict
 # Stupid function in place of the real one that Rayna is implementing
 def ph_dim(dist_matrix: np.ndarray,
            min_points=200,
-           max_points=2000,
+           max_points=8000,
            point_jump=200,
            h_dim=0,
            seed: int = 42,
@@ -74,7 +74,7 @@ def plot_ph_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
     complexity_key = "ph_dim"
 
     for key in tqdm(seed_results.keys()):
-
+        
         acc_gap_tab.append(seed_results[key]['acc_gap'])
         lr_tab.append(seed_results[key]['learning_rate'])
         bs_tab.append(seed_results[key]['batch_size'])
@@ -89,7 +89,6 @@ def plot_ph_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
         ph_dim_tab.append(complexity)
 
         seed_results[key][complexity_key] = complexity
-        ph_dim_tab.append(ph_dim(dist_matrix))
 
     # TODO: make the markers vary with the batch size
     markers = "o"

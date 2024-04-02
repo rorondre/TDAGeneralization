@@ -332,16 +332,15 @@ def main(
                 if compute_euclidean_dimension:
                     weights_history.append(get_weights(net))
 
-            # Validation history --> Useful only if we really compute the worst error, but not for now.
-            #te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
-            # te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
+            # Validation history --> Useful only if we really compute the worst error
+            # te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
+            te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
+
         # clear cache
         torch.cuda.empty_cache()
 
         if (len(loss_history) >= ripser_points) and compute_dimensions:
             STOP = True
-            # weights_history.popleft()
-            # loss_history.popleft()
 
         # final evaluation and saving results
         if STOP and CONVERGED:
@@ -388,7 +387,8 @@ def main(
                 "width": width,
                 "model": model,
                 "iterations": i,
-                "dataset": dataset
+                "dataset": dataset,
+                "worst_gen": 
             }
 
             if save_distance_matrix_file is not None:
