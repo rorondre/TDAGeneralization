@@ -10,8 +10,10 @@ from scipy.linalg import cho_factor, solve_triangular, solve
 from tqdm import tqdm
 from krypy.linsys import LinearSystem, Cg
 
+from analysis.kendall import granulated_kendall_from_dict
 
-# Stupid function in place of the real one that Rayna is implementing
+
+# unused
 def magnitude_slow(dist_matrix: np.ndarray, t: float = 1.) -> float:
     # this is a naive implementation, it can be improved
     if dist_matrix.shape[0] >= 1000:
@@ -33,6 +35,7 @@ def magnitude_slow(dist_matrix: np.ndarray, t: float = 1.) -> float:
     return Z.sum()
 
 
+# unused
 def magnitude_cloesky(dist_matrix: np.ndarray, t: float = 1.) -> float:
 
     M = np.exp(-dist_matrix)
@@ -41,7 +44,8 @@ def magnitude_cloesky(dist_matrix: np.ndarray, t: float = 1.) -> float:
 
     return x.T @ x
 
-def magnitude(dist_matrix: np.ndarray, t: float = 0.005) -> float:
+
+def magnitude(dist_matrix: np.ndarray, t: float = 35.) -> float:
 
     # from the PhD thesis of Salim, Shilan (2021)
     N=dist_matrix.shape[0]
@@ -56,7 +60,7 @@ def magnitude(dist_matrix: np.ndarray, t: float = 0.005) -> float:
 
 
 
-def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None):
+def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: float=1.):
 
     num_exp = len(seed_results.keys())
     logger.info(f"Found {num_exp} experiments")
@@ -65,6 +69,8 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None):
     magnitude_tab = []
     lr_tab = []
     bs_tab = []
+
+    complexity_key = "magnitude"
 
     for key in tqdm(seed_results.keys()):
 
@@ -77,7 +83,11 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None):
             raise FileNotFoundError(str(dist_matrix_path))
         
         dist_matrix = np.load(str(dist_matrix_path))
-        magnitude_tab.append(magnitude(dist_matrix))
+
+        complexity = magnitude(dist_matrix, t=t)
+        magnitude_tab.append(complexity)
+
+        seed_results[key][complexity_key] = complexity
 
     # TODO: make the markers vary with the batch size
     markers = "o"
@@ -104,7 +114,12 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None):
         plt.savefig(str(save_path))
         logger.info(f"Saving figure in {str(save_path)}")
     
-    return sc
+    granulated_kendalls = granulated_kendall_from_dict(
+        seed_results,
+        complexity_keys=[complexity_key]
+    )
+
+    return sc, granulated_kendalls
 
     
 def plot_magnitude_one_seed_from_json(json_path: str):
@@ -122,7 +137,7 @@ def plot_magnitude_one_seed_from_json(json_path: str):
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    sc = plot_magnitude_one_seed(results, ax, str(output_dir), save=True)
+    sc, _ = plot_magnitude_one_seed(results, ax, str(output_dir), save=True)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -130,7 +145,7 @@ def plot_magnitude_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_magnitude_all_seed(json_path: str):
+def plot_magnitude_all_seed(json_path: str, t:float=1.):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
@@ -144,7 +159,7 @@ def plot_magnitude_all_seed(json_path: str):
     ax = plt.axes()
 
     for seed in results.keys():
-        sc = plot_magnitude_one_seed(results[seed], ax, output_dir=None)
+        sc, granulated_kendalls = plot_magnitude_one_seed(results[seed], ax, output_dir=None, t=t)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -160,6 +175,12 @@ def plot_magnitude_all_seed(json_path: str):
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")
     plt.close()
+
+    granulated_kendalls["t"] = t
+
+    json_path = output_dir / "magnitude_granulated_kendalls.json"
+    with open(str(json_path), "w") as json_file:
+        json.dump(granulated_kendalls, json_file, indent=2)
 
 
 if __name__ == "__main__":

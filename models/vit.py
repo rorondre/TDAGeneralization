@@ -118,8 +118,7 @@ class Attention(nn.Module):
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj = nn.Linear(all_head_dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
-#        self.to_conv3d = nn.Sequential(nn.Conv3d(dim,all_head_dim, 3,padding='same'), 
-#                                    nn.BatchNorm3d(all_head_dim))
+        # self.to_conv3d = nn.Sequential(nn.Conv3d(dim,all_head_dim, 3,padding='same'), nn.BatchNorm3d(all_head_dim))
 
     def forward(self, x):
         B, N, C = x.shape
@@ -239,8 +238,6 @@ class VisionTransformer(nn.Module):
         return torch.cat((class_pos_embed.unsqueeze(0), patch_pos_embed), dim=1)
 
 
-
-
     def prepare_tokens(self, x):
         B, nc, w, h = x.shape
         x = self.patch_embed(x)  # patch linear embedding
@@ -265,6 +262,15 @@ class VisionTransformer(nn.Module):
             x = blk(x)
         x = self.norm(x)
         return self.head(x[:,0])
+
+    def get_before_head(self, x):
+
+        x = self.prepare_tokens(x)
+        for blk in self.blocks:
+            x = blk(x)
+        x = self.norm(x)
+        
+        return x
 
     def get_last_selfattention(self, x):
         x = self.prepare_tokens(x)

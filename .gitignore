@@ -9,6 +9,8 @@
 **/__pychache__/*
 */__pychache__/*
 **.pyc
+__pycache__
+.pytest_cache
 
 save_finetuned/
 

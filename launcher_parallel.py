@@ -158,7 +158,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str, default=str(datetime.datetime.now()).replace(" ", "_").replace(":", "_").split(".")[0])
     parser.add_argument('--mode', type=str, default="euler_slurm")
-    parser.add_argument('--long', type=int, default=0) # Whether we do the long or the short simulation
+    parser.add_argument('--long', type=int, default=1) # Whether we do the long or the short simulation
     # Currently short is 8 hours and long is 24 hours
 
     parser.add_argument('--num_cpus', type=int, default=20)
@@ -167,10 +167,10 @@ if __name__ == '__main__':
     # Variation of learning rate and batch size --> GRID
     parser.add_argument('--lr_min', type=float, default=1.e-6)
     parser.add_argument('--lr_max', type=float, default=1.e-3)
-    parser.add_argument('--bs_min', type=int, default=32)
+    parser.add_argument('--bs_min', type=int, default=16)
     parser.add_argument('--bs_max', type=int, default=512)
-    parser.add_argument('--n_lr', type=int, default=4)
-    parser.add_argument('--n_bs', type=int, default=4)
+    parser.add_argument('--n_lr', type=int, default=6)
+    parser.add_argument('--n_bs', type=int, default=6)
 
     # Parameters which are launcher specific
     parser.add_argument('--seed', type=int, default=SEED)
@@ -185,20 +185,23 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default="cifar10")
     parser.add_argument('--data_path', type=str, default="~/data/")
     parser.add_argument('--model', type=str, default="vit")
-    parser.add_argument('--depth', type=int, default=5)
-    parser.add_argument('--width', type=int, default=50)
+    parser.add_argument('--depth', type=int, default=4)
+    parser.add_argument('--width', type=int, default=100)
     parser.add_argument('--optim', type=str, default="Adam")
     parser.add_argument('--min_points', type=int, default=200)
-    parser.add_argument('--save_weights', type=int, default=1)
+    parser.add_argument('--save_weights', type=int, default=0)
     parser.add_argument('--compute_dimensions', type=int, default=1)
     parser.add_argument('--weight_file', type=int, default=1)  # Initial weights
-    parser.add_argument('--ripser_points', type=int, default=5000)
+    parser.add_argument('--ripser_points', type=int, default=10000)
     parser.add_argument('--data_proportion', type=float, default=1.)
-    parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.1)
+    parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=1.)
+    parser.add_argument('--freeze', type=int, default=1)
+    parser.add_argument('--compute_euclidean_dimension', type=int, default=1)
+    parser.add_argument('--proportion_eval', type=int, default=50000) # proportion to eval the pseudometric, unused at the moment
+    parser.add_argument('--worst_case_gen_freq', type=int, default=100) 
     
     
     # Unused arguments, needing to be implemented or removed
-    parser.add_argument('--proportion_eval', type=int, default=50000) # proportion to eval the pseudometric, unused at the moment
     parser.add_argument('--jump', type=int, default=1) # unused at the moment
     parser.add_argument('--additional_dimensions', type=int, default=1) # unused at the moment
 
