@@ -41,7 +41,7 @@ def magnitude_cloesky(dist_matrix: np.ndarray, t: float = 1.) -> float:
 
     return x.T @ x
 
-def magnitude(dist_matrix: np.ndarray, t: float = 35.) -> float:
+def magnitude(dist_matrix: np.ndarray, t: float = 0.005) -> float:
 
     # from the PhD thesis of Salim, Shilan (2021)
     N=dist_matrix.shape[0]
