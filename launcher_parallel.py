@@ -198,6 +198,7 @@ if __name__ == '__main__':
     parser.add_argument('--freeze', type=int, default=1)
     parser.add_argument('--compute_euclidean_dimension', type=int, default=1)
     parser.add_argument('--proportion_eval', type=int, default=50000) # proportion to eval the pseudometric, unused at the moment
+    parser.add_argument('--worst_case_gen_freq', type=int, default=100) 
     
     
     # Unused arguments, needing to be implemented or removed

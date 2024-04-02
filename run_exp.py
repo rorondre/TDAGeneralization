@@ -67,7 +67,8 @@ def main(args_):
                         args_.id_lr,
                         args_.pseudo_matrix_data_proportion,
                         args_.freeze,
-                        args_.compute_euclidean_dimension
+                        args_.compute_euclidean_dimension,
+                        args_.worst_case_gen_freq
                         )
 
 
@@ -110,6 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.01)
     parser.add_argument('--freeze', type=int, default=0)
     parser.add_argument('--compute_euclidean_dimension', type=int, default=1)
+    parser.add_argument('--worst_case_gen_freq', type=int, default=100)
 
 
     # Unused arguments, needing to be implemented or removed

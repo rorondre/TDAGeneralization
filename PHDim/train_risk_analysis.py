@@ -68,7 +68,8 @@ def main(
          id_lr: int = 0,
          pseudo_matrix_data_proportion: float = 0.01,
          freeze: bool=False,
-         compute_euclidean_dimension: bool=False):
+         compute_euclidean_dimension: bool=False,
+         worst_case_gen_freq: int = None):
 
 
     # Creating files to save results
@@ -241,6 +242,8 @@ def main(
     evaluation_history_TEST = []
     evaluation_history_TRAIN = []
 
+    worst_case_acc = []
+
     # initialize results of the experiment, returned if didn't work
     exp_dict = {}
 
@@ -334,7 +337,9 @@ def main(
 
             # Validation history --> Useful only if we really compute the worst error
             # te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
-            te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
+            if worst_case_gen_freq is not None and i % worst_case_gen_freq == 0:
+                te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
+                worst_case_acc.append(te_hist[1])
 
         # clear cache
         torch.cuda.empty_cache()
@@ -368,11 +373,17 @@ def main(
             metric = 'euclidean'
             metric_pseudo = 'manhattan'
 
-            distance_matrix_euclidean = pairwise_distances(weights_history_np, metric=metric)
+            if compute_euclidean_dimension:
+                distance_matrix_euclidean = pairwise_distances(weights_history_np, metric=metric)
             pseudo_distance_matrix = pairwise_distances(loss_history_np, metric=metric_pseudo)
 
             test_acc = evaluation_history_TEST[-1][2]
             train_acc = evaluation_history_TRAIN[-1][2]
+
+            if worst_case_gen_freq is not None:
+                worst_gen = min(worst_case_acc)
+            else:
+                worst_gen = "non_computed"
 
             exp_dict = {
                 "train_acc": train_acc,
@@ -388,7 +399,7 @@ def main(
                 "model": model,
                 "iterations": i,
                 "dataset": dataset,
-                "worst_gen": 
+                "worst_gen": worst_gen
             }
 
             if save_distance_matrix_file is not None:
@@ -396,11 +407,15 @@ def main(
                 np.save(str(save_distance_matrix_file), pseudo_distance_matrix)
                 exp_dict["saved_distance_matrix"] = str(save_distance_matrix_file)
 
-                euclidean_dm_file = (Path(save_distance_matrix_file).parent / \
-                                    (Path(save_distance_matrix_file).stem + "_euclidean")).with_suffix(".npy")
-                logger.info(f"Saving Euclidean distance matrix in {str(save_distance_matrix_file)} ✅")
-                np.save(str(euclidean_dm_file), distance_matrix_euclidean)
-                exp_dict["saved_distance_matrix_euclidean"] = str(euclidean_dm_file)
+                if compute_euclidean_dimension:
+                    euclidean_dm_file = (Path(save_distance_matrix_file).parent / \
+                                        (Path(save_distance_matrix_file).stem + "_euclidean")).with_suffix(".npy")
+                    logger.info(f"Saving Euclidean distance matrix in {str(save_distance_matrix_file)} ✅")
+                    np.save(str(euclidean_dm_file), distance_matrix_euclidean)
+                    exp_dict["saved_distance_matrix_euclidean"] = str(euclidean_dm_file)
+                else:
+                    exp_dict["saved_distance_matrix_euclidean"] = "non_computed"
+                    logger.info("Not computing Euclidean distance matrix, as specified by arguments")
 
             else:
                 logger.warning("No distance matrix has been saved")
