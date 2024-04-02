@@ -173,7 +173,7 @@ def main(
 
     net = net.to(device)
 
-    if freeze:
+    if freeze and model == "vit":
         logger.info("Freezing all network except head")
         logger.info("Computing all embeddings...")
         train_loader = preprocess_data_from_frozen_net(
@@ -242,7 +242,8 @@ def main(
     evaluation_history_TEST = []
     evaluation_history_TRAIN = []
 
-    worst_case_acc = []
+    # HACK
+    worst_case_acc = [100000]
 
     # initialize results of the experiment, returned if didn't work
     exp_dict = {}
@@ -254,7 +255,7 @@ def main(
     STOP = False  # Do we have enough point for persistent homology
     CONVERGED = False  # has the experiment converged?
 
-    # Defining optimizer
+    # Defining optimizer 
     opt = getattr(torch.optim, optim)(
         net.parameters(),
         lr=lr,
@@ -399,7 +400,7 @@ def main(
                 "model": model,
                 "iterations": i,
                 "dataset": dataset,
-                "worst_gen": worst_gen
+                "worst_acc": worst_gen
             }
 
             if save_distance_matrix_file is not None:

@@ -155,6 +155,7 @@ if __name__ == '__main__':
     SEED = int(str(time.time()).split(".")[1])
 
 
+    # Cluster specific parameters
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str, default=str(datetime.datetime.now()).replace(" ", "_").replace(":", "_").split(".")[0])
     parser.add_argument('--mode', type=str, default="euler_slurm")
@@ -179,26 +180,27 @@ if __name__ == '__main__':
     parser.add_argument('--result_dir', type=str, default=RESULT_DIR)
 
     # Parameters that are shared among all runs
-    parser.add_argument('--iterations', type=int, default=1)
+    parser.add_argument('--iterations', type=int, default=1) # before ripser points. Always use greater than 0.
     parser.add_argument('--batch_size_eval', type=int, default=256) # Batch size for evaluation, could be increased with good GPUs to speed up
-    parser.add_argument('--eval_freq', type=int, default=1000000)
+    # It is a parameter of the eval function
+    parser.add_argument('--eval_freq', type=int, default=1000000) # We don't care about this
     parser.add_argument('--dataset', type=str, default="cifar10")
     parser.add_argument('--data_path', type=str, default="~/data/")
     parser.add_argument('--model', type=str, default="vit")
-    parser.add_argument('--depth', type=int, default=4)
-    parser.add_argument('--width', type=int, default=100)
-    parser.add_argument('--optim', type=str, default="Adam")
-    parser.add_argument('--min_points', type=int, default=200)
-    parser.add_argument('--save_weights', type=int, default=0)
-    parser.add_argument('--compute_dimensions', type=int, default=1)
-    parser.add_argument('--weight_file', type=int, default=1)  # Initial weights
-    parser.add_argument('--ripser_points', type=int, default=10000)
-    parser.add_argument('--data_proportion', type=float, default=1.)
-    parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=1.)
-    parser.add_argument('--freeze', type=int, default=1)
-    parser.add_argument('--compute_euclidean_dimension', type=int, default=1)
-    parser.add_argument('--proportion_eval', type=int, default=50000) # proportion to eval the pseudometric, unused at the moment
-    parser.add_argument('--worst_case_gen_freq', type=int, default=100) 
+    parser.add_argument('--depth', type=int, default=4) # Only for FCN
+    parser.add_argument('--width', type=int, default=100) # Only for FCN
+    parser.add_argument('--optim', type=str, default="Adam") # Optimizer
+    parser.add_argument('--min_points', type=int, default=200) # Not used anymore
+    parser.add_argument('--save_weights', type=int, default=0) # whether to save the weights
+    parser.add_argument('--compute_dimensions', type=int, default=1) # Always use 1, if 0 no distance matrices
+    parser.add_argument('--weight_file', type=int, default=1)  # Whether to user the initial weights
+    parser.add_argument('--ripser_points', type=int, default=10000) # Nb of iterations after convergence
+    parser.add_argument('--data_proportion', type=float, default=1.) # subset of the data used for training (everything). Always use 1.
+    parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=1.) # proportion of data for the pseudo distance matrix
+    parser.add_argument('--freeze', type=int, default=0) # Experimental, whether to freeze everything but the head. ONLY FOR VIT
+    parser.add_argument('--compute_euclidean_dimension', type=int, default=1) # whether to compute the Euclidean distance matrices
+    parser.add_argument('--proportion_eval', type=int, default=50000) # not used anymore
+    parser.add_argument('--worst_case_gen_freq', type=int, default=100) # frequency to compute test accuracy. If you dont want it, use 100000000000
     
     
     # Unused arguments, needing to be implemented or removed
