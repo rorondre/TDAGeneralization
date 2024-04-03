@@ -26,3 +26,10 @@ weights/
 
 final_results
 final_results/*
+
+# Profiling files
+*.prof
+**/*.prof
+
+profiling_test/
+profiling_test

@@ -251,6 +251,7 @@ def main(
     # weights
     weights_history = deque([])
     loss_history = deque([])
+    loss_01_history = deque([])
 
     STOP = False  # Do we have enough point for persistent homology
     CONVERGED = False  # has the experiment converged?
@@ -328,18 +329,20 @@ def main(
                 proportion_eval_x = eval_x[:pseudo_matrix_data_number,...]
                 proportion_eval_y = eval_y[:pseudo_matrix_data_number,...]
 
-                tr_hist, losses, _ = eval_on_tensors(proportion_eval_x, proportion_eval_y, net, crit_unreduced)
+                tr_hist, losses, _, losses_01 = eval_on_tensors(proportion_eval_x, proportion_eval_y, net, crit_unreduced, return_01=True)
                 # tr_hist, losses, _ = eval(train_loader_eval, net, crit_unreduced, opt)
                 evaluation_history_TRAIN.append([i, *tr_hist])
 
                 loss_history.append(losses.cpu())
+                loss_01_history.append(losses_01.cpu())
                 if compute_euclidean_dimension:
                     weights_history.append(get_weights(net))
 
             # Validation history --> Useful only if we really compute the worst error
             # te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
             if worst_case_gen_freq is not None and i % worst_case_gen_freq == 0:
-                te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
+                # te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
+                te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
                 worst_case_acc.append(te_hist[1])
 
         # clear cache
@@ -370,6 +373,7 @@ def main(
                 del weights_history
 
             loss_history_np = torch.stack(tuple(loss_history)).cpu().numpy()
+            loss_01_history_np = torch.stack(tuple(loss_01_history)).cpu().numpy().astype(np.int32)
 
             metric = 'euclidean'
             metric_pseudo = 'manhattan'
@@ -377,6 +381,7 @@ def main(
             if compute_euclidean_dimension:
                 distance_matrix_euclidean = pairwise_distances(weights_history_np, metric=metric)
             pseudo_distance_matrix = pairwise_distances(loss_history_np, metric=metric_pseudo)
+            pseudo_distance_matrix_01 = pairwise_distances(loss_01_history_np, metric=metric_pseudo)
 
             test_acc = evaluation_history_TEST[-1][2]
             train_acc = evaluation_history_TRAIN[-1][2]
@@ -403,10 +408,17 @@ def main(
                 "worst_acc": worst_gen
             }
 
+            save_distance_matrix_file_01 = (Path(save_distance_matrix_file).parent / \
+                                            (Path(save_distance_matrix_file).stem + "_01")).with_suffix(".png")
+
             if save_distance_matrix_file is not None:
                 logger.info(f"Saving pseudo distance matrix in {str(save_distance_matrix_file)} ✅")
                 np.save(str(save_distance_matrix_file), pseudo_distance_matrix)
                 exp_dict["saved_distance_matrix"] = str(save_distance_matrix_file)
+
+                logger.info(f"Saving pseudo distance matrix 01 in {str(save_distance_matrix_file_01)} ✅")
+                np.save(str(save_distance_matrix_file), pseudo_distance_matrix_01)
+                exp_dict["saved_distance_matrix"] = str(save_distance_matrix_file_01)
 
                 if compute_euclidean_dimension:
                     euclidean_dm_file = (Path(save_distance_matrix_file).parent / \

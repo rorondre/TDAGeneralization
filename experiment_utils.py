@@ -11,6 +11,7 @@ import subprocess
 import multiprocessing
 
 from typing import Dict, Optional, Any, List
+from loguru import logger
 
 """ Relevant Directories """
 
@@ -63,7 +64,10 @@ def _start_process(target, args=None):
     return p
 
 
-def generate_base_command(module, flags: Optional[Dict[str, Any]] = None, unbuffered: bool = True) -> str:
+def generate_base_command(module,\
+                             flags: Optional[Dict[str, Any]] = None,\
+                              unbuffered: bool = True,
+                              profiling: bool=True) -> str:
     """ Generates the command to execute python module with provided flags
 
     Args:
@@ -79,10 +83,25 @@ def generate_base_command(module, flags: Optional[Dict[str, Any]] = None, unbuff
     """ Module is a python file to execute """
     interpreter_script = sys.executable
     base_exp_script = os.path.abspath(module.__file__)
+
     if unbuffered:
-        base_cmd = interpreter_script + ' -u ' + base_exp_script
+        base_cmd = interpreter_script + ' -u '
     else:
-        base_cmd = interpreter_script + ' ' + base_exp_script
+        base_cmd = interpreter_script + ' '
+
+    if profiling:
+        assert isinstance(flags, dict), "To use profiling, specify hyperparameters (for file naming)"
+        assert "id_lr" in flags.keys(), "id_lr should be an arguments, for profiling"
+        assert "batch_size_train" in flags.keys(), "batch_size_train should be an arguments, for profiling"
+
+        id_lr = flags["id_lr"]
+        bs = flags["batch_size_train"]
+        profiling_filename = f"profiling_id_lr_{id_lr}_bs_{bs}.prof"
+        base_cmd += f"-m cProfile -o {profiling_filename} "
+
+    base_cmd += base_exp_script
+
+
     if flags is not None:
         assert isinstance(flags, dict), "Flags must be provided as dict"
         for flag, setting in flags.items():
@@ -96,6 +115,8 @@ def generate_base_command(module, flags: Optional[Dict[str, Any]] = None, unbuff
             else:
                 base_cmd += f" --{flag}={setting}"
                 # base_cmd += f" --{flag.replace('_', '-')}={setting}"
+    
+    logger.debug(base_cmd)
                 
     return base_cmd
 

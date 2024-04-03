@@ -11,6 +11,7 @@ from gph.python import ripser_parallel
 
 from analysis.plot_E_alpha import E_alpha
 from analysis.kendall import granulated_kendall_from_dict
+from analysis.pearson import granulated_pearson_from_dict
 
 
 # Stupid function in place of the real one that Rayna is implementing
@@ -63,6 +64,32 @@ def ph_dim(dist_matrix: np.ndarray,
     return alpha / (1 - m)
 
 
+def ph_dim_E_correction(dist_matrix: np.ndarray,
+           min_points=200,
+           max_points=2000,
+           point_jump=200,
+           h_dim=0,
+           seed: int = 42,
+           alpha: float = 1.,
+           n: int = 50000) -> float:
+
+    estimated_dim = max(0., ph_dim(
+        dist_matrix,
+        min_points=min_points,
+        max_points=max_points,
+        point_jump=point_jump,
+        h_dim=h_dim,
+        seed=seed,
+        alpha=alpha
+    ))
+
+    corrected_E_alpha = E_alpha(dist_matrix, h_dim=0, alpha=estimated_dim)
+
+    # return estimated_dim * np.log(np.sqrt(n)) + np.log(corrected_E_alpha)
+    return np.sqrt((6. * np.log(corrected_E_alpha) + 2. * estimated_dim * np.log(n)))
+
+
+
 
 def plot_ph_dim_one_seed(seed_results: dict,\
                          ax,\
@@ -91,7 +118,7 @@ def plot_ph_dim_one_seed(seed_results: dict,\
 
         dist_matrix = np.load(str(dist_matrix_path))
 
-        complexity = ph_dim(dist_matrix, min_points=min_points, max_points=max_points)
+        complexity = ph_dim_E_correction(dist_matrix, min_points=min_points, max_points=max_points)
         ph_dim_tab.append(complexity)
 
         seed_results[key][complexity_key] = float(complexity)
@@ -152,7 +179,7 @@ def plot_ph_dim_one_seed_from_json(json_path: str):
 
 def plot_ph_dim_all_seed(json_path: str, \
                         min_points: int = 200,
-                         max_points: int = None):
+                         max_points: int = 2000):
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
 

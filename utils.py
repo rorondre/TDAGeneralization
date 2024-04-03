@@ -39,7 +39,10 @@ class LabelSmoothingCrossEntropy(nn.Module):
         return self._compute_losses(x, target).mean()
 
 
-def accuracy(out, y):
+def accuracy(out, y, return_01: bool=False):
     _, pred = out.max(1)
     correct = pred.eq(y)
-    return 100 * correct.sum().float() / y.size(0)
+    if return_01:
+        return 100 * correct.sum().float() / y.size(0), correct
+    else:
+        return 100 * correct.sum().float() / y.size(0)

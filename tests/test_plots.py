@@ -1,7 +1,5 @@
 import json
-import tempfile
 from pathlib import Path
-import numpy as np
 
 from analysis.plot_E_alpha import plot_E_alpha_all_seed
 from analysis.plot_magnitude import plot_magnitude_all_seed

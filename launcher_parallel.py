@@ -194,11 +194,11 @@ if __name__ == '__main__':
     parser.add_argument('--save_weights', type=int, default=0) # whether to save the weights
     parser.add_argument('--compute_dimensions', type=int, default=1) # Always use 1, if 0 no distance matrices
     parser.add_argument('--weight_file', type=int, default=1)  # Whether to user the initial weights
-    parser.add_argument('--ripser_points', type=int, default=10000) # Nb of iterations after convergence
+    parser.add_argument('--ripser_points', type=int, default=5000) # Nb of iterations after convergence
     parser.add_argument('--data_proportion', type=float, default=1.) # subset of the data used for training (everything). Always use 1.
     parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=1.) # proportion of data for the pseudo distance matrix
     parser.add_argument('--freeze', type=int, default=0) # Experimental, whether to freeze everything but the head. ONLY FOR VIT
-    parser.add_argument('--compute_euclidean_dimension', type=int, default=1) # whether to compute the Euclidean distance matrices
+    parser.add_argument('--compute_euclidean_dimension', type=int, default=0) # whether to compute the Euclidean distance matrices
     parser.add_argument('--proportion_eval', type=int, default=50000) # not used anymore
     parser.add_argument('--worst_case_gen_freq', type=int, default=100) # frequency to compute test accuracy. If you dont want it, use 100000000000
     
