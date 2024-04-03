@@ -15,8 +15,8 @@ from analysis.kendall import granulated_kendall_from_dict
 
 # Stupid function in place of the real one that Rayna is implementing
 def ph_dim(dist_matrix: np.ndarray,
-           min_points=200,
-           max_points=8000,
+           min_points=1,
+           max_points=None,
            point_jump=200,
            h_dim=0,
            seed: int = 42,
@@ -58,11 +58,17 @@ def ph_dim(dist_matrix: np.ndarray,
 
     error = ((y - (m * x + b)) ** 2).mean()
 
-    logger.debug(f"Ph Dimension Calculation has an approximate error of: {error}.")
+    logger.debug(f"ph Dimension Calculation has an approximate error of: {error}.")
 
     return alpha / (1 - m)
 
-def plot_ph_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
+
+
+def plot_ph_dim_one_seed(seed_results: dict,\
+                         ax,\
+                          output_dir: str = None,
+                          min_points: int = 200,
+                          max_points: int = None):
     num_exp = len(seed_results.keys())
     logger.info(f"Found {num_exp} experiments")
 
@@ -85,10 +91,10 @@ def plot_ph_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
 
         dist_matrix = np.load(str(dist_matrix_path))
 
-        complexity = ph_dim(dist_matrix)
+        complexity = ph_dim(dist_matrix, min_points=min_points, max_points=max_points)
         ph_dim_tab.append(complexity)
 
-        seed_results[key][complexity_key] = complexity
+        seed_results[key][complexity_key] = float(complexity)
 
     # TODO: make the markers vary with the batch size
     markers = "o"
@@ -110,7 +116,7 @@ def plot_ph_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
     plt.grid()
 
     if output_dir is not None:
-        save_path = Path(output_dir) / "Ph_dim_vs_generealization_error.png"
+        save_path = Path(output_dir) / "ph_dim_vs_generalization_error.png"
         plt.savefig(str(save_path))
         logger.info(f"Saving figure in {str(save_path)}")
 
@@ -119,7 +125,7 @@ def plot_ph_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
         complexity_keys=[complexity_key]
     )
 
-    return sc, granulated_kendalls
+    return sc, granulated_kendalls, seed_results
 
 
 def plot_ph_dim_one_seed_from_json(json_path: str):
@@ -136,7 +142,7 @@ def plot_ph_dim_one_seed_from_json(json_path: str):
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    sc, _ = plot_ph_dim_one_seed(results, ax, str(output_dir), save=True)
+    sc, _, _ = plot_ph_dim_one_seed(results, ax, str(output_dir), save=True)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -144,7 +150,9 @@ def plot_ph_dim_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_ph_dim_all_seed(json_path: str):
+def plot_ph_dim_all_seed(json_path: str, \
+                        min_points: int = 200,
+                         max_points: int = None):
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
 
@@ -153,11 +161,19 @@ def plot_ph_dim_all_seed(json_path: str):
 
     logger.info(f"Found {len(results.keys())} random seeds")
 
+    new_results = {}
+
     plt.figure()
     ax = plt.axes()
 
     for seed in results.keys():
-        sc, granulated_kendalls = plot_ph_dim_one_seed(results[seed], ax, output_dir=None)
+        sc, granulated_kendalls, seed_results = plot_ph_dim_one_seed(results[seed],
+                                                             ax, 
+                                                             output_dir=None,
+                                                             min_points=min_points,
+                                                             max_points=max_points)
+        new_results[seed] = seed_results
+
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -165,7 +181,7 @@ def plot_ph_dim_all_seed(json_path: str):
     output_dir = json_path.parent / "figures"
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
-    save_path = output_dir / "Ph_dim_vs_generealization_error.png"
+    save_path = output_dir / "ph_dim_vs_generalization_error.png"
 
     ax.grid(visible=True, which="minor")
     plt.grid(visible=True, which="minor")
@@ -177,6 +193,10 @@ def plot_ph_dim_all_seed(json_path: str):
     json_path = output_dir / "ph_dim_granulated_kendalls.json"
     with open(str(json_path), "w") as json_file:
         json.dump(granulated_kendalls, json_file, indent=2)
+
+    results_path = output_dir.parent / "all_results.json"
+    with open(str(results_path), "w") as json_file:
+        json.dump(new_results, json_file, indent=2)
 
 
 if __name__ == "__main__":

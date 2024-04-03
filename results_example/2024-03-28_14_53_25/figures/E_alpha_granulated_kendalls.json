@@ -1,0 +1,13 @@
+{
+  "granulated Kendalls": {
+    "E_alpha": {
+      "batch_size": NaN,
+      "learning_rate": 1.0,
+      "average granulated Kendall coefficient": NaN
+    }
+  },
+  "Kendall tau": {
+    "E_alpha": 0.8164965809277261
+  },
+  "alpha": 1.0
+}

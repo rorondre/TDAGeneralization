@@ -58,8 +58,6 @@ def magnitude(dist_matrix: np.ndarray, t: float = 35.) -> float:
 
 
 
-
-
 def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: float=1.):
 
     num_exp = len(seed_results.keys())
@@ -85,9 +83,16 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
         dist_matrix = np.load(str(dist_matrix_path))
 
         complexity = magnitude(dist_matrix, t=t)
+        n = 5
+        logger.info(f"inverse magnitude: {1. / complexity}")
+        logger.info(f"exponential term: {np.exp(-t/np.sqrt(n))}")
+        # complexity = max(0., 1/(max(1.e-6, 1/complexity - np.exp(-t/np.sqrt(n)))))
+        complexity = max(0., 1/( 1/complexity - np.exp(-t/np.sqrt(n))))
+
+
         magnitude_tab.append(complexity)
 
-        seed_results[key][complexity_key] = complexity
+        seed_results[key][complexity_key] = float(complexity)
 
     # TODO: make the markers vary with the batch size
     markers = "o"
@@ -110,7 +115,7 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
     plt.grid()
     
     if output_dir is not None:
-        save_path = Path(output_dir) / "magnitude_vs_generealization_error.png"
+        save_path = Path(output_dir) / "magnitude_vs_generalization_error.png"
         plt.savefig(str(save_path))
         logger.info(f"Saving figure in {str(save_path)}")
     
@@ -119,7 +124,7 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
         complexity_keys=[complexity_key]
     )
 
-    return sc, granulated_kendalls
+    return sc, granulated_kendalls, seed_results
 
     
 def plot_magnitude_one_seed_from_json(json_path: str):
@@ -137,7 +142,7 @@ def plot_magnitude_one_seed_from_json(json_path: str):
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    sc, _ = plot_magnitude_one_seed(results, ax, str(output_dir), save=True)
+    sc, _, _ = plot_magnitude_one_seed(results, ax, str(output_dir), save=True)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -145,7 +150,7 @@ def plot_magnitude_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_magnitude_all_seed(json_path: str, t:float=1.):
+def plot_magnitude_all_seed(json_path: str, t:float=0.01):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
@@ -155,19 +160,23 @@ def plot_magnitude_all_seed(json_path: str, t:float=1.):
 
     logger.info(f"Found {len(results.keys())} random seeds")
 
+    new_results = {}
+
+
     plt.figure()
     ax = plt.axes()
 
     for seed in results.keys():
-        sc, granulated_kendalls = plot_magnitude_one_seed(results[seed], ax, output_dir=None, t=t)
-
+        sc, granulated_kendalls, seed_results = plot_magnitude_one_seed(results[seed], ax, output_dir=None, t=t)
+        new_results[seed] = seed_results
+    
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
 
     output_dir = json_path.parent / "figures"
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
-    save_path = output_dir / "magnitude_vs_generealization_error.png"
+    save_path = output_dir / "magnitude_vs_generalization_error.png"
 
     ax.grid(visible=True, which="minor")
     plt.grid(visible=True, which="minor")
@@ -181,6 +190,10 @@ def plot_magnitude_all_seed(json_path: str, t:float=1.):
     json_path = output_dir / "magnitude_granulated_kendalls.json"
     with open(str(json_path), "w") as json_file:
         json.dump(granulated_kendalls, json_file, indent=2)
+
+    results_path = output_dir.parent / "all_results.json"
+    with open(str(results_path), "w") as json_file:
+        json.dump(new_results, json_file, indent=2)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,9 @@
       "last_losses": "outputs_loss_1.0000000000000004e-06_32.npy",
       "iterations": 7,
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_0.npy",
-      "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_0.pth"
+      "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_0.pth",
+      "magnitude": 224.10717042785203,
+      "E_alpha": 0.00022363662719726562
     },
     "1": {
       "train_acc": 3.125,
@@ -32,7 +34,9 @@
       "last_losses": "outputs_loss_1.0000000000000004e-06_64.npy",
       "iterations": 7,
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_2.npy",
-      "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_2.pth"
+      "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_2.pth",
+      "magnitude": 224.10717042785203,
+      "E_alpha": 0.00047588348388671875
     },
     "2": {
       "train_acc": 9.375,
@@ -49,7 +53,9 @@
       "last_losses": "outputs_loss_0.00010000000000000009_64.npy",
       "iterations": 7,
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_3.npy",
-      "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_3.pth"
+      "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_3.pth",
+      "magnitude": 229.7022354717014,
+      "E_alpha": 0.021999120712280273
     },
     "3": {
       "train_acc": 9.375,
@@ -66,7 +72,9 @@
       "last_losses": "outputs_loss_0.00010000000000000009_32.npy",
       "iterations": 7,
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_1.npy",
-      "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_1.pth"
+      "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_1.pth",
+      "magnitude": 226.67380745835598,
+      "E_alpha": 0.010314702987670898
     }
   },
   "85082": {
@@ -85,7 +93,9 @@
       "last_losses": "outputs_loss_1.0000000000000004e-06_32.npy",
       "iterations": 7,
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_4.npy",
-      "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_4.pth"
+      "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_4.pth",
+      "magnitude": 224.10717042785203,
+      "E_alpha": 0.0003027915954589844
     },
     "1": {
       "train_acc": 9.433961868286133,
@@ -102,7 +112,9 @@
       "last_losses": "outputs_loss_0.00010000000000000009_64.npy",
       "iterations": 7,
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_7.npy",
-      "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_7.pth"
+      "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_7.pth",
+      "magnitude": 234.55297472843768,
+      "E_alpha": 0.039913177490234375
     },
     "2": {
       "train_acc": 1.8867924213409424,
@@ -119,7 +131,9 @@
       "last_losses": "outputs_loss_1.0000000000000004e-06_64.npy",
       "iterations": 7,
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_6.npy",
-      "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_6.pth"
+      "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_6.pth",
+      "magnitude": 224.10717042785203,
+      "E_alpha": 0.00037026405334472656
     },
     "3": {
       "train_acc": 9.433961868286133,
@@ -136,7 +150,9 @@
       "last_losses": "outputs_loss_0.00010000000000000009_32.npy",
       "iterations": 7,
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_5.npy",
-      "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_5.pth"
+      "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_5.pth",
+      "magnitude": 232.12449061199717,
+      "E_alpha": 0.03090834617614746
     }
   }
 }

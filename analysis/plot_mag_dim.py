@@ -94,7 +94,7 @@ def plot_mag_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
         complexity = mag_dim(dist_matrix, alpha=alpha)
         mag_dim_tab.append(complexity)
 
-        seed_results[key][complexity_key] = complexity
+        seed_results[key][complexity_key] = float(complexity)
 
     # TODO: make the markers vary with the batch size
     markers = "o"
@@ -116,7 +116,7 @@ def plot_mag_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
     plt.grid()
 
     if output_dir is not None:
-        save_path = Path(output_dir) / "mag_dim_vs_generealization_error.png"
+        save_path = Path(output_dir) / "mag_dim_vs_generalization_error.png"
         plt.savefig(str(save_path))
         logger.info(f"Saving figure in {str(save_path)}")
 
@@ -125,7 +125,7 @@ def plot_mag_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
         complexity_keys=[complexity_key]
     )
 
-    return sc, granulated_kendalls
+    return sc, granulated_kendalls, seed_results
 
 
 def plot_mag_dim_one_seed_from_json(json_path: str):
@@ -142,7 +142,7 @@ def plot_mag_dim_one_seed_from_json(json_path: str):
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    sc, _ = plot_mag_dim_one_seed(results, ax, str(output_dir), save=True)
+    sc, _, _ = plot_mag_dim_one_seed(results, ax, str(output_dir), save=True)
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -159,11 +159,14 @@ def plot_mag_dim_all_seed(json_path: str):
 
     logger.info(f"Found {len(results.keys())} random seeds")
 
+    new_results = {}
+
     plt.figure()
     ax = plt.axes()
 
     for seed in results.keys():
-        sc, granulated_kendalls = plot_mag_dim_one_seed(results[seed], ax, output_dir=None)
+        sc, granulated_kendalls, seed_results = plot_mag_dim_one_seed(results[seed], ax, output_dir=None)
+        new_results[seed] = seed_results
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
@@ -171,7 +174,7 @@ def plot_mag_dim_all_seed(json_path: str):
     output_dir = json_path.parent / "figures"
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
-    save_path = output_dir / "mag_dim_vs_generealization_error.png"
+    save_path = output_dir / "mag_dim_vs_generalization_error.png"
 
     ax.grid(visible=True, which="minor")
     plt.grid(visible=True, which="minor")
@@ -183,6 +186,10 @@ def plot_mag_dim_all_seed(json_path: str):
     json_path = output_dir / "magnitude_dimensions_granulated_kendalls.json"
     with open(str(json_path), "w") as json_file:
         json.dump(granulated_kendalls, json_file, indent=2)
+
+    results_path = output_dir.parent / "all_results.json"
+    with open(str(results_path), "w") as json_file:
+        json.dump(new_results, json_file, indent=2)
 
 
 if __name__ == "__main__":
