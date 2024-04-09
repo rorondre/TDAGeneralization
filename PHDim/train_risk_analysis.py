@@ -13,6 +13,7 @@ from models import alexnet, fc_mnist, vgg, fc_cifar, lenet, vit
 from models.build_model import create_model
 
 from models.vit import VisionTransformer
+from models.swin import SwinTransformer
 from functools import partial
 
 from models.vgg import vgg as make_vgg
@@ -50,9 +51,9 @@ def main(
          batch_size_eval: int = 100,
          lr: float = 1.e-1,
          eval_freq: int = 1000,
-         dataset: str = "cifar100",
+         dataset: str = "cifar10",
          data_path: str = "~/data/",
-         model: str = "vit",
+         model: str = "swin",
          save_folder: str = "results",
          depth: int = 5,
          width: int = 50,
@@ -63,8 +64,9 @@ def main(
          save_distance_matrix_file: str = None,
          compute_dimensions: bool = True,
          # weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_could_be_it.pth',
-         weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/vit_cifar100_check.pth',
-         ripser_points: int = 500,
+         # weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/vit_cifar100_check.pth',
+        weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/swin_cifar10_properly_pretrained.pth',
+        ripser_points: int = 500,
          jump: int = 20,
          additional_dimensions: bool = False,
          data_proportion: float = 1.,
@@ -110,8 +112,8 @@ def main(
     SCALE = 64
 
     # TODO: use the args here
-    if model not in ["fc", "alexnet", "vgg", "lenet", "vit"]:
-        raise NotImplementedError(f"Model {model} not implemented, should be in ['fc', 'alexnet', 'vgg']")
+    if model not in ["fc", "alexnet", "vgg", "lenet", "vit", "swin"]:
+        raise NotImplementedError(f"Model {model} not implemented, should be in ['fc', 'alexnet', 'vgg', 'lenet', 'vit', 'swin']")
     if model == 'fc':
         if dataset == 'mnist':
             input_size = 28**2
@@ -171,10 +173,28 @@ def main(
                                       qkv_bias=True,
                                       drop_path_rate=sd,
                                       norm_layer=partial(nn.LayerNorm, eps=1e-6)).to(device)
-
         else:
-            raise NotImplementedError("Only CIFAR10 and CIFAR100 are supported with VIT for now.")
+            raise NotImplementedError("Only CIFAR10 and CIFAR100 are supported with ViT for now.")
 
+    elif model == "swin":
+        if dataset == 'cifar10':
+            # Specific parameters for vit and Cifar10 -- to be added to args
+            n_classes = 10
+            img_size = 32
+            mlp_ratio = 2
+            window_size = 4
+            sd = 0.1  # rate of stochastic depth
+            patch_size = 2 if img_size == 32 else 4
+
+            net = SwinTransformer(img_size=img_size,
+                                  window_size=window_size, patch_size=patch_size, embed_dim=96, depths=[2, 6, 4],
+                                  num_heads=[3, 6, 12], num_classes=n_classes,
+                                  mlp_ratio=mlp_ratio, qkv_bias=True, drop_path_rate=sd).to(device)
+        else:
+            raise NotImplementedError("Only CIFAR10 is supported with Swin for now.")
+
+    else:
+        NotImplementedError("Model architecture not implemented . . .")
 
     logger.info("Network: ")
     print(net)
