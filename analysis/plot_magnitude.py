@@ -82,6 +82,7 @@ def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
     # if conv==None:
     #     if delta is None:
     target_value = 5950  # hardcoded for 6000 ripser points
+    target_value = 0.95*dist_matrix.shape[0]
     guess = 10
     conv = guess_target_point(dist_matrix, target_value, guess=guess)
     #     conv_target = conv

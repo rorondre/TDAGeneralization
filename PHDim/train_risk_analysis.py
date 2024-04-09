@@ -47,7 +47,7 @@ def main(
          batch_size_eval: int = 100,
          lr: float = 1.e-1,
          eval_freq: int = 1000,
-         dataset: str = "cifar10",
+         dataset: str = "cifar100",
          data_path: str = "~/data/",
          model: str = "vit",
          save_folder: str = "results",
@@ -59,7 +59,8 @@ def main(
          save_weights_file: str = None,
          save_distance_matrix_file: str = None,
          compute_dimensions: bool = True,
-         weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_could_be_it.pth',
+         # weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_could_be_it.pth',
+         weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/vit_cifar100_check.pth',
          ripser_points: int = 500,
          jump: int = 20,
          additional_dimensions: bool = False,
@@ -83,7 +84,7 @@ def main(
     torch.manual_seed(seed)
 
     # training setup
-    if dataset not in ["mnist", "cifar10"]:
+    if dataset not in ["mnist", "cifar10", "cifar100"]:
         raise NotImplementedError(f"Dataset {dataset} not implemented, should be in ['mnist', 'cifar10']")
     train_loader, test_loader_eval,\
         train_loader_eval, num_classes = get_data_simple(dataset,
@@ -126,7 +127,6 @@ def main(
             net = lenet().to(device)
     elif model == "vit":
         if dataset == 'cifar10':
-
             # Specific parameters for vit and Cifar10 -- to be added to args
             n_classes = 10
             img_size = 32
@@ -146,9 +146,29 @@ def main(
                                       qkv_bias=True,
                                       drop_path_rate=sd,
                                       norm_layer=partial(nn.LayerNorm, eps=1e-6)).to(device)
+        elif dataset == 'cifar100':
+            # Specific parameters for CIFAR100
+            n_classes = 100
+            img_size = 32
+            # default values, this can be done in a better way
+            vit_mlp_ratio = 2 # MLP layers in the transformer encoder'
+            sd = 0.1 #rate of stochastic depth
+            # model = create_model(img_size, n_classes)
+            patch_size = 4 if img_size == 32 else 8  # 4 if img_size = 32 else 8: patch size for ViT
+            net = VisionTransformer(img_size=[img_size],
+                                      patch_size=patch_size,
+                                      in_chans=3,
+                                      num_classes=n_classes,
+                                      embed_dim=192,
+                                      depth=9,
+                                      num_heads=12,
+                                      mlp_ratio=vit_mlp_ratio,
+                                      qkv_bias=True,
+                                      drop_path_rate=sd,
+                                      norm_layer=partial(nn.LayerNorm, eps=1e-6)).to(device)
 
         else:
-            raise NotImplementedError("Only CIFAR10 is supported with VIT for now.")
+            raise NotImplementedError("Only CIFAR10 and CIFAR100 are supported with VIT for now.")
 
 
     logger.info("Network: ")
