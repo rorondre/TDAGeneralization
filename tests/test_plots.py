@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from analysis.plot_E_alpha import plot_E_alpha_all_seed
-from analysis.plot_magnitude import plot_magnitude_all_seed
+from analysis.plot_magnitude_simple import plot_magnitude_all_seed
 from analysis.plot_ph_dim import plot_ph_dim_all_seed
 
 

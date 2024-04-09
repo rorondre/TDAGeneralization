@@ -23,4 +23,4 @@ source /home/$USER/.bashrc
 
 conda activate py39_phd
 
-PYTHONPATH=$PWD python analysis/plot_magnitude.py "$@"
+PYTHONPATH=$PWD python analysis/plot_magnitude_simple.py "$@"
