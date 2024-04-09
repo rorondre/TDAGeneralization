@@ -85,7 +85,7 @@ def main(
 
     # training setup
     if dataset not in ["mnist", "cifar10", "cifar100"]:
-        raise NotImplementedError(f"Dataset {dataset} not implemented, should be in ['mnist', 'cifar10']")
+        raise NotImplementedError(f"Dataset {dataset} not implemented, should be in ['mnist', 'cifar10', 'cifar100']")
     train_loader, test_loader_eval,\
         train_loader_eval, num_classes = get_data_simple(dataset,
                                                          data_path,
