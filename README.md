@@ -19,6 +19,7 @@ TODO
  - 1. what is said above
  - 2. non-pseudo quantities: in particular be able to freeze layers
  - 3. new plots: plot mag in terms of t (Rayna), and $E_\alpha$ wrt $\alpha$, kendall   (Ben)
- - 4. Curvature
- - 5. understand how to set t and $\alpha$
- - 6. In the future: other models and datasets
+ - 4. Automate the computation of magnitude dimension: automate the selection of the interval such that the slope is the closest to the true dimension
+ - 5. Curvature
+ - 6. understand how to set t and $\alpha$
+ - 7. In the future: other models and datasets
