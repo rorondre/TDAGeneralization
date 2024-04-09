@@ -1,6 +1,8 @@
 import json
 import tempfile
 from pathlib import Path
+
+import pytest
 import numpy as np
 
 from models.fc import fc_mnist
@@ -53,6 +55,7 @@ class WeightsUncorrectlySaved(BaseException):
 
 RIPSER_POINTS = 3
 
+# @pytest.mark.skip()
 def test_train_risk_analysis():
 
     with tempfile.TemporaryDirectory() as output_dir:

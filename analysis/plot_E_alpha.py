@@ -23,7 +23,7 @@ def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 1.) -> float:
     return alpha_sum
 
 
-def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None, alpha: float=1.):
+def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None, alpha: float=1., stem:str=""):
 
     num_exp = len(seed_results.keys())
     logger.info(f"Found {num_exp} experiments")
@@ -37,11 +37,15 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None, alpha: f
 
     for key in tqdm(seed_results.keys()):
 
-        acc_gap_tab.append(seed_results[key]['acc_gap'])
+        # acc_gap_tab.append(seed_results[key]['acc_gap'])
+        if 'worst_acc' in seed_results[key].keys():
+            acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
+        else:
+            acc_gap_tab.append(seed_results[key]['acc_gap'])
         lr_tab.append(seed_results[key]['learning_rate'])
         bs_tab.append(seed_results[key]['batch_size'])
 
-        dist_matrix_path = Path(seed_results[key]["saved_distance_matrix"])
+        dist_matrix_path = Path(seed_results[key]["saved_distance_matrix" + stem])
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
         
@@ -108,7 +112,7 @@ def plot_E_alpha_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_E_alpha_all_seed(json_path: str, alpha: float = 1.):
+def plot_E_alpha_all_seed(json_path: str, alpha: float = 1., stem: str=""):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
@@ -120,6 +124,7 @@ def plot_E_alpha_all_seed(json_path: str, alpha: float = 1.):
 
     new_results = {}
 
+    assert stem in ["", "_euclidean", "_01"], stem
 
     plt.figure()
     ax = plt.axes()
@@ -128,14 +133,15 @@ def plot_E_alpha_all_seed(json_path: str, alpha: float = 1.):
         sc, granulated_kendalls, seed_results = plot_E_alpha_one_seed(results[seed],
                                      ax, 
                                      output_dir=None,
-                                     alpha=alpha)
+                                     alpha=alpha,
+                                     stem=stem)
         new_results[seed] = seed_results
         
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
 
-    output_dir = json_path.parent / "figures"
+    output_dir = json_path.parent / ("figures" + stem)
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "E_alpha_vs_generalization_error.png"
@@ -153,7 +159,7 @@ def plot_E_alpha_all_seed(json_path: str, alpha: float = 1.):
     with open(str(json_path), "w") as json_file:
         json.dump(granulated_kendalls, json_file, indent=2)
 
-    logger.debug(json.dumps(new_results, indent=2))
+    # logger.debug(json.dumps(new_results, indent=2))
     
     results_path = output_dir.parent / "all_results.json"
     with open(str(results_path), "w") as json_file:

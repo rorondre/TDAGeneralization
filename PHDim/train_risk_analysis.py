@@ -21,7 +21,10 @@ from utils import accuracy, LabelSmoothingCrossEntropy
 from PHDim.dataset import get_data_simple, preprocess_data_from_frozen_net
 from PHDim.eval import eval, recover_eval_tensors, eval_on_tensors
 
+from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import pairwise_distances
+from sklearn.random_projection import SparseRandomProjection
+
 
 # from utils import LabelSmoothingCrossEntropy
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:21"
@@ -69,7 +72,8 @@ def main(
          pseudo_matrix_data_proportion: float = 0.01,
          freeze: bool=False,
          compute_euclidean_dimension: bool=False,
-         worst_case_gen_freq: int = None):
+         worst_case_gen_freq: int = None,
+         JL_projection: float = None):
 
 
     # Creating files to save results
@@ -98,6 +102,7 @@ def main(
 
     # The max is a hack to have the pytest pass and run fast
     pseudo_matrix_data_number = max(1,int(data_number * pseudo_matrix_data_proportion))
+    logger.info(f"Pseudo matrix data number: {pseudo_matrix_data_number}")
 
     # Some params for CIFAR:
     BATCH_NORM = False
@@ -154,7 +159,7 @@ def main(
     logger.info("Network: ")
     print(net)
     n_parameters = sum(p.numel() for p in net.parameters() if p.requires_grad)
-    logger.info("Number of params: ")
+    logger.info(f"Number of params: {n_parameters}")
     print(n_parameters)
 
     if weight_file is not None:
@@ -172,6 +177,14 @@ def main(
             raise UnknownWeightFormatError(f"Extension {Path(weight_file).suffix} unknown")
 
     net = net.to(device)
+
+    # Optional creation of the Gaussian projection matrix deduced from Johnson-Lindenstrauss lemma
+    # This is based on sparse projections
+    if JL_projection is not None and JL_projection > 0. and JL_projection < 1.:
+        logger.info(f"Defining random projections with relative variation of {round(100. * JL_projection, 2)}%")
+        random_projection = SparseRandomProjection(eps = JL_projection)
+        random_projection.fit(csr_matrix((ripser_points, n_parameters)))
+        logger.info(f"Number of projected components: {random_projection.n_components_}")
 
     if freeze and model == "vit":
         logger.info("Freezing all network except head")
@@ -235,6 +248,13 @@ def main(
     eval_x, eval_y = recover_eval_tensors(train_loader_eval)
     test_x, test_y = recover_eval_tensors(test_loader_eval)
 
+    logger.debug(f"eval shape: {eval_x.shape}")
+
+    eval_x = eval_x.to(device)
+    eval_y = eval_y.to(device)
+    test_x = test_x.to(device)
+    test_y = test_y.to(device)
+
     # training logs per iteration
     training_history = []
 
@@ -285,7 +305,7 @@ def main(
                 CONVERGED = True
 
             loss_train = losses.sum().item()
-            logger.info(f"Loss sum at iteration{i}: {loss_train}")
+            logger.info(f"Loss sum at iteration {i}: {loss_train}")
 
         net.train()
 
@@ -295,9 +315,6 @@ def main(
         out = net(x)
         loss = crit(out, y)
 
-        if i % 1000 == 0:
-            logger.info(f"Loss at iteration {i}: {loss.item()}")
-
         if torch.isnan(loss):
             logger.error('Loss has gone nan ❌')
             break
@@ -305,11 +322,11 @@ def main(
         # calculate the gradients
         loss.backward()
 
-        # record training history (starts at initial point)
-        training_history.append([i, loss.item(), accuracy(out, y).item()])
-
         # take the step
         opt.step()
+
+        # record training history (starts at initial point)
+        training_history.append([i, loss.item(), accuracy(out, y).item()])
 
         if i > iterations:
             CONVERGED = True
@@ -323,30 +340,45 @@ def main(
             # TODO: clean this
 
             if compute_dimensions:
-                # it fails at this line:
-                # clear cache
-                torch.cuda.empty_cache()
-                proportion_eval_x = eval_x[:pseudo_matrix_data_number,...]
-                proportion_eval_y = eval_y[:pseudo_matrix_data_number,...]
 
-                tr_hist, losses, _, losses_01 = eval_on_tensors(proportion_eval_x, proportion_eval_y, net, crit_unreduced, return_01=True)
-                # tr_hist, losses, _ = eval(train_loader_eval, net, crit_unreduced, opt)
-                evaluation_history_TRAIN.append([i, *tr_hist])
+                with torch.no_grad():
 
-                loss_history.append(losses.cpu())
-                loss_01_history.append(losses_01.cpu())
-                if compute_euclidean_dimension:
-                    weights_history.append(get_weights(net))
+                    # it fails at this line:
+                    # clear cache
+                    # torch.cuda.empty_cache()
 
-            # Validation history --> Useful only if we really compute the worst error
-            # te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
-            if worst_case_gen_freq is not None and i % worst_case_gen_freq == 0:
-                # te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
-                te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
-                worst_case_acc.append(te_hist[1])
+                    tr_hist, losses, _, losses_01 = eval_on_tensors(eval_x[:pseudo_matrix_data_number,...],\
+                                                        eval_y[:pseudo_matrix_data_number,...], 
+                                                        net, 
+                                                        crit_unreduced, 
+                                                        return_01=True)
+                    assert losses.ndim == 1, losses.shape
+                    assert len(losses) == pseudo_matrix_data_number, (losses.shape, pseudo_matrix_data_number)
+                    # tr_hist, losses, _ = eval(train_loader_eval, net, crit_unreduced, opt)
+                    evaluation_history_TRAIN.append([i, *tr_hist])
+
+                    loss_history.append(losses.cpu())
+                    loss_01_history.append(losses_01.cpu())
+                    if compute_euclidean_dimension:
+                        if JL_projection is not None and JL_projection > 0. and JL_projection < 1.:
+                            weights_history.append(
+                                random_projection.transform(get_weights(net)[np.newaxis,...])[0,...]
+                                )
+
+                        else:             
+                            weights_history.append(get_weights(net))
+
+                    # Validation history --> Useful only if we really compute the worst error
+                    # te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
+                    if worst_case_gen_freq is not None and i % worst_case_gen_freq == 0:
+                        # te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
+                        te_hist, *_ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
+                        worst_case_acc.append(te_hist[1].item())
+                        logger.info(f"Test accuracy at iteration {i}: {te_hist[1]}")
+                    
 
         # clear cache
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
 
         if (len(loss_history) >= ripser_points) and compute_dimensions:
             STOP = True
@@ -360,9 +392,9 @@ def main(
                 break
 
             # Some logging
-            logger.debug('eval time {}'.format(i))
-            te_hist, *_ = eval(test_loader_eval, net, crit_unreduced, opt)
-            tr_hist, *_ = eval(train_loader_eval, net, crit_unreduced, opt)
+            with torch.no_grad():
+                te_hist, *_ = eval(test_loader_eval, net, crit_unreduced, opt)
+                tr_hist, *_ = eval(train_loader_eval, net, crit_unreduced, opt)
 
             evaluation_history_TEST.append([i + 1, *te_hist])
             evaluation_history_TRAIN.append([i + 1, *tr_hist])
@@ -371,6 +403,9 @@ def main(
             if compute_euclidean_dimension:
                 weights_history_np = np.stack(tuple(weights_history))
                 del weights_history
+                assert weights_history_np.shape[0] == ripser_points, (weights_history_np.shape, ripser_points)
+                if JL_projection is not None and JL_projection > 0. and JL_projection < 1.:
+                    assert weights_history_np.shape[1] == random_projection.n_components_, weights_history_np.shape
 
             loss_history_np = torch.stack(tuple(loss_history)).cpu().numpy()
             loss_01_history_np = torch.stack(tuple(loss_01_history)).cpu().numpy().astype(np.int32)
@@ -387,6 +422,8 @@ def main(
             train_acc = evaluation_history_TRAIN[-1][2]
 
             if worst_case_gen_freq is not None:
+                logger.debug(f"wors_acc: {worst_case_acc}")
+                print(worst_case_acc)
                 worst_gen = min(worst_case_acc)
             else:
                 worst_gen = "non_computed"
@@ -409,7 +446,7 @@ def main(
             }
 
             save_distance_matrix_file_01 = (Path(save_distance_matrix_file).parent / \
-                                            (Path(save_distance_matrix_file).stem + "_01")).with_suffix(".png")
+                                            (Path(save_distance_matrix_file).stem + "_01")).with_suffix(".npy")
 
             if save_distance_matrix_file is not None:
                 logger.info(f"Saving pseudo distance matrix in {str(save_distance_matrix_file)} ✅")
@@ -417,8 +454,8 @@ def main(
                 exp_dict["saved_distance_matrix"] = str(save_distance_matrix_file)
 
                 logger.info(f"Saving pseudo distance matrix 01 in {str(save_distance_matrix_file_01)} ✅")
-                np.save(str(save_distance_matrix_file), pseudo_distance_matrix_01)
-                exp_dict["saved_distance_matrix"] = str(save_distance_matrix_file_01)
+                np.save(str(save_distance_matrix_file_01), pseudo_distance_matrix_01)
+                exp_dict["saved_distance_matrix_01"] = str(save_distance_matrix_file_01)
 
                 if compute_euclidean_dimension:
                     euclidean_dm_file = (Path(save_distance_matrix_file).parent / \

@@ -50,6 +50,9 @@ class AnalysisOptions(BaseModel):
     additional_dimensions: bool = False  # whether or not compute the ph dimensions used in the robustness experiment
     # data_proportion: float = 1. # Proportion of data to use (between 0 and 1), used for pytests
     data_proportion: float = 1. # Proportion of data to use (between 0 and 1), used for pytests
+    JL_projection: float = 0.05 # Proportion of data to use (between 0 and 1), used for pytests
+    compute_euclidean_dimension: bool = True
+    worst_case_gen_freq: int = 1
 
     def __call__(self):
 
@@ -132,7 +135,8 @@ class AnalysisOptions(BaseModel):
                     ripser_points=self.ripser_points,
                     jump=self.jump,
                     additional_dimensions=self.additional_dimensions,
-                    data_proportion=self.data_proportion
+                    data_proportion=self.data_proportion,
+                    JL_projection=self.JL_projection
                 )
 
                 experiment_results[exp_num] = exp_dict

@@ -76,7 +76,8 @@ def test_train_risk_analysis():
                                   ripser_points=RIPSER_POINTS,
                                   jump=5,
                                   resize=8,
-                                  initial_weights=None)
+                                  initial_weights=None,
+                                  JL_projection=0.05)
 
         exp_folder = options()
 

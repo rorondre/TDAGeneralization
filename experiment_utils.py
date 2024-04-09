@@ -116,7 +116,7 @@ def generate_base_command(module,\
                 base_cmd += f" --{flag}={setting}"
                 # base_cmd += f" --{flag.replace('_', '-')}={setting}"
     
-    logger.debug(base_cmd)
+    # logger.debug(base_cmd)
                 
     return base_cmd
 

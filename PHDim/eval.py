@@ -23,10 +23,6 @@ def recover_eval_tensors(dataloader):
 @torch.no_grad()
 def eval_on_tensors(x, y, net, criterion, return_01: bool=False):
 
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-    x, y = x.to(device), y.to(device)
-
     out = net(x)
 
     losses = criterion(out, y)
@@ -38,7 +34,7 @@ def eval_on_tensors(x, y, net, criterion, return_01: bool=False):
 
     hist = [
         losses.sum().item() / x.shape[0],
-        prec / x.shape[0],
+        prec,
     ]
 
     if return_01:

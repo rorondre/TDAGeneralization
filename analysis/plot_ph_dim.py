@@ -95,7 +95,8 @@ def plot_ph_dim_one_seed(seed_results: dict,\
                          ax,\
                           output_dir: str = None,
                           min_points: int = 200,
-                          max_points: int = None):
+                          max_points: int = None,
+                          stem:str=""):
     num_exp = len(seed_results.keys())
     logger.info(f"Found {num_exp} experiments")
 
@@ -108,17 +109,22 @@ def plot_ph_dim_one_seed(seed_results: dict,\
 
     for key in tqdm(seed_results.keys()):
         
-        acc_gap_tab.append(seed_results[key]['acc_gap'])
+        # acc_gap_tab.append(seed_results[key]['acc_gap'])
+        if 'worst_acc' in seed_results[key].keys():
+            acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
+        else:
+            acc_gap_tab.append(seed_results[key]['acc_gap'])
         lr_tab.append(seed_results[key]['learning_rate'])
         bs_tab.append(seed_results[key]['batch_size'])
 
-        dist_matrix_path = Path(seed_results[key]["saved_distance_matrix"])
+        dist_matrix_path = Path(seed_results[key]["saved_distance_matrix" + stem])
+        logger.info(f"Using distance matrix {str(dist_matrix_path)}")
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
 
         dist_matrix = np.load(str(dist_matrix_path))
 
-        complexity = ph_dim_E_correction(dist_matrix, min_points=min_points, max_points=max_points)
+        complexity = ph_dim(dist_matrix, min_points=min_points, max_points=max_points)
         ph_dim_tab.append(complexity)
 
         seed_results[key][complexity_key] = float(complexity)
@@ -179,7 +185,8 @@ def plot_ph_dim_one_seed_from_json(json_path: str):
 
 def plot_ph_dim_all_seed(json_path: str, \
                         min_points: int = 200,
-                         max_points: int = 2000):
+                         max_points: int = 2000,
+                         stem: str=""):
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
 
@@ -190,6 +197,8 @@ def plot_ph_dim_all_seed(json_path: str, \
 
     new_results = {}
 
+    assert stem in ["", "_euclidean", "_01"], stem
+
     plt.figure()
     ax = plt.axes()
 
@@ -198,14 +207,15 @@ def plot_ph_dim_all_seed(json_path: str, \
                                                              ax, 
                                                              output_dir=None,
                                                              min_points=min_points,
-                                                             max_points=max_points)
+                                                             max_points=max_points,
+                                                             stem=stem)
         new_results[seed] = seed_results
 
 
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
 
-    output_dir = json_path.parent / "figures"
+    output_dir = json_path.parent / ("figures" + stem)
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "ph_dim_vs_generalization_error.png"

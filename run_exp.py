@@ -68,7 +68,8 @@ def main(args_):
                         args_.pseudo_matrix_data_proportion,
                         args_.freeze,
                         args_.compute_euclidean_dimension,
-                        args_.worst_case_gen_freq
+                        args_.worst_case_gen_freq,
+                        args_.JL_projection
                         )
 
 
@@ -111,7 +112,8 @@ if __name__ == '__main__':
     parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.01)
     parser.add_argument('--freeze', type=int, default=0)
     parser.add_argument('--compute_euclidean_dimension', type=int, default=1)
-    parser.add_argument('--worst_case_gen_freq', type=int, default=100)
+    parser.add_argument('--worst_case_gen_freq', type=int, default=100) # frequency to compute test accuracy. If you dont want it, use 100000000000
+    parser.add_argument('--JL_projection', type=float, default=0.05) 
 
 
     # Unused arguments, needing to be implemented or removed

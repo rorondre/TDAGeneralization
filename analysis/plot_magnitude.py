@@ -58,7 +58,7 @@ def magnitude(dist_matrix: np.ndarray, t: float = 35.) -> float:
 
 
 
-def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: float=1.):
+def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: float=1., stem: str=""):
 
     num_exp = len(seed_results.keys())
     logger.info(f"Found {num_exp} experiments")
@@ -72,23 +72,28 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
 
     for key in tqdm(seed_results.keys()):
 
-        acc_gap_tab.append(seed_results[key]['acc_gap'])
+        # acc_gap_tab.append(seed_results[key]['acc_gap'])
+        if 'worst_acc' in seed_results[key].keys():
+            acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
+        else:
+            acc_gap_tab.append(seed_results[key]['acc_gap'])
         lr_tab.append(seed_results[key]['learning_rate'])
         bs_tab.append(seed_results[key]['batch_size'])
 
-        dist_matrix_path = Path(seed_results[key]["saved_distance_matrix"])
+        dist_matrix_path = Path(seed_results[key]["saved_distance_matrix" + stem])
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
         
         dist_matrix = np.load(str(dist_matrix_path))
 
-        complexity = magnitude(dist_matrix, t=t)
-        n = 5
-        logger.info(f"inverse magnitude: {1. / complexity}")
-        logger.info(f"exponential term: {np.exp(-t/np.sqrt(n))}")
-        # complexity = max(0., 1/(max(1.e-6, 1/complexity - np.exp(-t/np.sqrt(n)))))
-        complexity = max(0., 1/( 1/complexity - np.exp(-t/np.sqrt(n))))
+        # epsilon = 0.01
+        # # t = np.sqrt(n) / np.max(dist_matrix[np.nonzero(dist_matrix)])
+        # t = np.log(5000) / epsilon
+        # logger.info(f'Theoretical value of t: {t}')
 
+        complexity = magnitude(dist_matrix, t=t)
+        # complexity = 1. / (1. / complexity - np.exp(-t * epsilon))
+        logger.info(f"Complexity: {complexity}") 
 
         magnitude_tab.append(complexity)
 
@@ -150,7 +155,7 @@ def plot_magnitude_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_magnitude_all_seed(json_path: str, t:float=0.01):
+def plot_magnitude_all_seed(json_path: str, t:float=0.01, stem:str=""):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
@@ -162,18 +167,19 @@ def plot_magnitude_all_seed(json_path: str, t:float=0.01):
 
     new_results = {}
 
+    assert stem in ["", "_euclidean", "_01"], stem
 
     plt.figure()
     ax = plt.axes()
 
     for seed in results.keys():
-        sc, granulated_kendalls, seed_results = plot_magnitude_one_seed(results[seed], ax, output_dir=None, t=t)
+        sc, granulated_kendalls, seed_results = plot_magnitude_one_seed(results[seed], ax, output_dir=None, t=t, stem=stem)
         new_results[seed] = seed_results
     
     cbar = plt.colorbar(sc)
     cbar.set_label("Learning rate")
 
-    output_dir = json_path.parent / "figures"
+    output_dir = json_path.parent / ("figures" + stem)
     if not output_dir.is_dir():
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "magnitude_vs_generalization_error.png"
