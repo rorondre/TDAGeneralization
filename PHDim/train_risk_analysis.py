@@ -45,15 +45,15 @@ def get_weights(net):
 
 
 def main(
-        iterations: int = 10000,
+        iterations: int = 1,
          batch_size_train: int = 100,
          batch_size_eval: int = 100,
          lr: float = 1.e-1,
          eval_freq: int = 1000,
-         dataset: str = "cifar100",
+         dataset: str = "cifar10",
          data_path: str = "~/data/",
-         model: str = "vit",
-         save_folder: str = "results",
+         model: str = "fc",
+         save_folder: str = "tests_directory",
          depth: int = 5,
          width: int = 50,
          optim: str = "SGD",
@@ -62,12 +62,11 @@ def main(
          save_weights_file: str = None,
          save_distance_matrix_file: str = None,
          compute_dimensions: bool = True,
-         # weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_could_be_it.pth',
-         weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/vit_cifar100_check.pth',
+         weight_file: str = None,
          ripser_points: int = 500,
          jump: int = 20,
          additional_dimensions: bool = False,
-         data_proportion: float = 1.,
+         data_proportion: float = 0.01,
          proportion_eval: int = 500,
          id_lr: int = 0,
          pseudo_matrix_data_proportion: float = 0.01,
@@ -372,6 +371,7 @@ def main(
                                                         net, 
                                                         crit_unreduced, 
                                                         return_01=True)
+                    
                     assert losses.ndim == 1, losses.shape
                     assert len(losses) == pseudo_matrix_data_number, (losses.shape, pseudo_matrix_data_number)
                     # tr_hist, losses, _ = eval(train_loader_eval, net, crit_unreduced, opt)
@@ -462,7 +462,8 @@ def main(
                 "model": model,
                 "iterations": i,
                 "dataset": dataset,
-                "worst_acc": worst_gen
+                "worst_acc": worst_gen,
+                "n": data_number
             }
 
             save_distance_matrix_file_01 = (Path(save_distance_matrix_file).parent / \

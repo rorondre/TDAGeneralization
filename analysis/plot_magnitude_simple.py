@@ -74,7 +74,8 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
 
         # acc_gap_tab.append(seed_results[key]['acc_gap'])
         if 'worst_acc' in seed_results[key].keys():
-            acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
+            acc_gap_tab.append(seed_results[key]['loss_gap'])
+            # acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
         else:
             acc_gap_tab.append(seed_results[key]['acc_gap'])
         lr_tab.append(seed_results[key]['learning_rate'])
@@ -84,15 +85,16 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
         
-        dist_matrix = np.load(str(dist_matrix_path))
+        n = 50000
+        dist_matrix = np.load(str(dist_matrix_path)) / n
 
-        # epsilon = 0.01
+        epsilon = 1. / np.sqrt(n)
         # # t = np.sqrt(n) / np.max(dist_matrix[np.nonzero(dist_matrix)])
-        # t = np.log(5000) / epsilon
-        # logger.info(f'Theoretical value of t: {t}')
+        t = (np.log(5000) / epsilon) 
+        logger.info(f'Value of t: {t}')
 
         complexity = magnitude(dist_matrix, t=t)
-        # complexity = 1. / (1. / complexity - np.exp(-t * epsilon))
+        complexity = 1. / (1. / complexity - np.exp(-t * epsilon))
         logger.info(f"Complexity: {complexity}") 
 
         magnitude_tab.append(complexity)

@@ -39,6 +39,7 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None, alpha: f
 
         # acc_gap_tab.append(seed_results[key]['acc_gap'])
         if 'worst_acc' in seed_results[key].keys():
+            # acc_gap_tab.append(seed_results[key]['loss_gap'])
             acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
         else:
             acc_gap_tab.append(seed_results[key]['acc_gap'])
