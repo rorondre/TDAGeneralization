@@ -13,7 +13,8 @@ from loguru import logger
 
 
 # Path to initial weights
-WEIGHT_FILE = "weights/checkpoint_95_3.pth"
+# WEIGHT_FILE = "weights/checkpoint_95_3.pth"
+WEIGHT_FILE = "weights/vit_cifar100_check.pth"
 
 
 
@@ -140,8 +141,13 @@ PYTHONPATH=$PWD python launcher_parallel.py --num_gpus 0 --num_cpus 2 --n_lr 2 -
 """
 
 """
-Test Commmand VIT
+Test Commmand VIT - CIFAR10
 PYTHONPATH=$PWD python launcher_parallel.py --compute_euclidean_dimension 1 --JL_projection 0.05 --num_gpus 1 --num_cpus 1 --n_lr 1 --n_bs 1 --result_dir tests_directory --num_seeds_per_hparam 1 --dataset cifar10 --model vit --iterations 2 --ripser_points 3 --min_points 1 --weight_file 1 --data_proportion 0.001 --bs_max 4 --bs_min 2
+"""
+
+"""
+Test Commmand VIT - CIFAR100
+PYTHONPATH=$PWD python launcher_parallel.py --compute_euclidean_dimension 1 --JL_projection 0.05 --num_gpus 1 --num_cpus 1 --n_lr 1 --n_bs 1 --result_dir tests_directory --num_seeds_per_hparam 1 --dataset cifar100 --model vit --iterations 2 --ripser_points 3 --min_points 1 --weight_file 1 --data_proportion 1. --bs_max 4 --bs_min 2
 """
 
 """
