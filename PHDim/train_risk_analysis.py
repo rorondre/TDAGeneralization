@@ -14,6 +14,7 @@ from models.build_model import create_model
 
 from models.vit import VisionTransformer
 from models.swin import SwinTransformer
+from models.cait import cait_models
 from functools import partial
 
 from models.vgg import vgg as make_vgg
@@ -51,22 +52,26 @@ def main(
          batch_size_eval: int = 100,
          lr: float = 1.e-1,
          eval_freq: int = 1000,
-         dataset: str = "cifar10",
+         dataset: str = "cifar100",
          data_path: str = "~/data/",
          model: str = "swin",
          save_folder: str = "results",
          depth: int = 5,
          width: int = 50,
-         optim: str = "SGD",
+         optim: str = "Adam",
          min_points: int = 200,
          seed: int = 42,
          save_weights_file: str = None,
          save_distance_matrix_file: str = None,
          compute_dimensions: bool = True,
          # weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_could_be_it.pth',
-         # weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/vit_cifar100_check.pth',
-        weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/swin_cifar10_properly_pretrained.pth',
-        ripser_points: int = 500,
+          weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/vit_cifar100_check.pth',
+         # weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/swin_cifar10_properly_pretrained.pth',
+         # weight_file: str = None,
+         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_swin_cifar100_check.pth',
+
+        #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_epoch_unknown_cait.pth',
+         ripser_points: int = 500,
          jump: int = 20,
          additional_dimensions: bool = False,
          data_proportion: float = 1.,
@@ -112,8 +117,8 @@ def main(
     SCALE = 64
 
     # TODO: use the args here
-    if model not in ["fc", "alexnet", "vgg", "lenet", "vit", "swin"]:
-        raise NotImplementedError(f"Model {model} not implemented, should be in ['fc', 'alexnet', 'vgg', 'lenet', 'vit', 'swin']")
+    if model not in ["fc", "alexnet", "vgg", "lenet", "vit", "swin", "cait"]:
+        raise NotImplementedError(f"Model {model} not implemented, should be in ['fc', 'alexnet', 'vgg', 'lenet', 'vit', 'swin', 'cait']")
     if model == 'fc':
         if dataset == 'mnist':
             input_size = 28**2
@@ -190,8 +195,36 @@ def main(
                                   window_size=window_size, patch_size=patch_size, embed_dim=96, depths=[2, 6, 4],
                                   num_heads=[3, 6, 12], num_classes=n_classes,
                                   mlp_ratio=mlp_ratio, qkv_bias=True, drop_path_rate=sd).to(device)
+        elif dataset == 'cifar100':
+            # Specific parameters for CIFAR100
+            n_classes = 100
+            img_size = 32
+            mlp_ratio = 2
+            window_size = 4
+            # default values, this can be done in a better way
+            vit_mlp_ratio = 2 # MLP layers in the transformer encoder'
+            sd = 0.1 #rate of stochastic depth
+            # model = create_model(img_size, n_classes)
+            patch_size = 2 if img_size == 32 else 4
+            net = SwinTransformer(img_size=img_size,
+                                  window_size=window_size, patch_size=patch_size, embed_dim=96, depths=[2, 6, 4],
+                                  num_heads=[3, 6, 12], num_classes=n_classes,
+                                  mlp_ratio=mlp_ratio, qkv_bias=True, drop_path_rate=sd).to(device)
         else:
-            raise NotImplementedError("Only CIFAR10 is supported with Swin for now.")
+            raise NotImplementedError("Only CIFAR10 and CIFAR100 are supported with Swin for now.")
+
+    elif model == "cait":
+        if dataset == 'cifar10':
+            n_classes = 10
+            img_size = 32
+            mlp_ratio = 2
+            window_size = 4
+            sd = 0.1  # rate of stochastic depth
+            patch_size = 4 if img_size == 32 else 8
+            net = cait_models(
+            img_size= img_size,patch_size=patch_size, embed_dim=192, depth=24, num_heads=4, mlp_ratio=mlp_ratio,
+            qkv_bias=True,num_classes=n_classes,drop_path_rate=sd,norm_layer=partial(nn.LayerNorm, eps=1e-6),
+            init_scale=1e-5,depth_token_only=2)
 
     else:
         NotImplementedError("Model architecture not implemented . . .")
@@ -207,7 +240,10 @@ def main(
         if Path(weight_file).suffix == ".pth":
             if torch.cuda.is_available():
                 logger.warning("Loading weights on GPU")
-                net.load_state_dict(torch.load(weight_file))
+                if model in ['swin', 'cait']:
+                    net.load_state_dict(torch.load(weight_file)['model_state_dict'])
+                else:
+                    net.load_state_dict(torch.load(weight_file))
             else:
                 logger.warning("Loading weights on CPU")
                 net.load_state_dict(torch.load(weight_file), map_location=torch.device("cpu"))
