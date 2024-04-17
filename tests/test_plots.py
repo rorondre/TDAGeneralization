@@ -13,7 +13,7 @@ FIGURES_DIR = Path("results_example/2024-03-28_14_53_25/figures")
 
 def test_plot_E_alpha():
 
-    plot_E_alpha_all_seed(RESULT_EXAMPLES_JSON)
+    plot_E_alpha_all_seed(RESULT_EXAMPLES_JSON, stem="")
 
     assert (FIGURES_DIR / "E_alpha_vs_generalization_error.png").exists()
     assert (FIGURES_DIR / "E_alpha_granulated_kendalls.json").exists()
@@ -27,7 +27,7 @@ def test_plot_E_alpha():
 
 def test_plot_magnitude():
 
-    plot_magnitude_all_seed(RESULT_EXAMPLES_JSON)
+    plot_magnitude_all_seed(RESULT_EXAMPLES_JSON, stem="")
 
     assert (FIGURES_DIR / "magnitude_vs_generalization_error.png").exists()
     assert (FIGURES_DIR / "magnitude_granulated_kendalls.json").exists()
