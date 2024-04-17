@@ -74,7 +74,8 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
 
         # acc_gap_tab.append(seed_results[key]['acc_gap'])
         if 'worst_acc' in seed_results[key].keys():
-            acc_gap_tab.append(seed_results[key]['acc_gap'])
+            acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
+            #acc_gap_tab.append(seed_results[key]['acc_gap'])
         else:
             acc_gap_tab.append(seed_results[key]['acc_gap'])
         lr_tab.append(seed_results[key]['learning_rate'])
@@ -155,8 +156,7 @@ def plot_magnitude_one_seed_from_json(json_path: str):
 
     plt.close()
 
-
-def plot_magnitude_all_seed(json_path: str, t:float=0.01, stem:str="_01"):
+def plot_magnitude_all_seed(json_path: str, t:float=0.1, stem:str="_euclidean"):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)

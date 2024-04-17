@@ -13,15 +13,19 @@ from loguru import logger
 
 
 # Path to initial weights
+# For ViT, CIFAR10:
 # WEIGHT_FILE = "weights/checkpoint_95_3.pth"
-<<<<<<< Updated upstream
-WEIGHT_FILE = "weights/vit_cifar100_check.pth"
-=======
-# For CIFAR100:
+# For ViT, CIFAR100:
 # WEIGHT_FILE = "weights/vit_cifar100_check.pth"
 # For Swin, CIFAR10:
 WEIGHT_FILE = "weights/swin_cifar10_properly_pretrained.pth"
->>>>>>> Stashed changes
+# For Swin, CIFAR100:
+# WEIGHT_FILE = "weights/checkpoint_swin_cifar100_check.pth"
+# For CaiT, CIFAR10:
+#WEIGHT_FILE = "weights/checkpoint_cifar10_cait_to_test.pth"
+# For CaiT, CIFAR100:
+# WEIGHT_FILE = "weights/checkpoint_cifar_100_cait_completed.pth"
+
 
 
 

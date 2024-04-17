@@ -67,7 +67,7 @@ def _start_process(target, args=None):
 def generate_base_command(module,\
                              flags: Optional[Dict[str, Any]] = None,\
                               unbuffered: bool = True,
-                              profiling: bool=True) -> str:
+                              profiling: bool=False) -> str:
     """ Generates the command to execute python module with provided flags
 
     Args:

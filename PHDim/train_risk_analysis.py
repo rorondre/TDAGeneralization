@@ -225,6 +225,17 @@ def main(
             img_size= img_size,patch_size=patch_size, embed_dim=192, depth=24, num_heads=4, mlp_ratio=mlp_ratio,
             qkv_bias=True,num_classes=n_classes,drop_path_rate=sd,norm_layer=partial(nn.LayerNorm, eps=1e-6),
             init_scale=1e-5,depth_token_only=2)
+        elif dataset == 'cifar100':
+            n_classes = 100
+            img_size = 32
+            mlp_ratio = 2
+            window_size = 4
+            sd = 0.1  # rate of stochastic depth
+            patch_size = 4 if img_size == 32 else 8
+            net = cait_models(
+            img_size= img_size,patch_size=patch_size, embed_dim=192, depth=24, num_heads=4, mlp_ratio=mlp_ratio,
+            qkv_bias=True,num_classes=n_classes,drop_path_rate=sd,norm_layer=partial(nn.LayerNorm, eps=1e-6),
+            init_scale=1e-5,depth_token_only=2)
 
     else:
         NotImplementedError("Model architecture not implemented . . .")
@@ -240,7 +251,7 @@ def main(
         if Path(weight_file).suffix == ".pth":
             if torch.cuda.is_available():
                 logger.warning("Loading weights on GPU")
-                if model in ['swin', 'cait']:
+                if model in ['swin', 'cait'] and dataset in ['cifar100']:
                     net.load_state_dict(torch.load(weight_file)['model_state_dict'])
                 else:
                     net.load_state_dict(torch.load(weight_file))

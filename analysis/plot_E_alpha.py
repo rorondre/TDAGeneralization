@@ -114,7 +114,7 @@ def plot_E_alpha_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_E_alpha_all_seed(json_path: str, alpha: float = 1., stem: str="_01"):
+def plot_E_alpha_all_seed(json_path: str, alpha: float = 1., stem: str=""):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)

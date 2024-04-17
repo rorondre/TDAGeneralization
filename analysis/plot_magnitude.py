@@ -81,36 +81,47 @@ def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
     # from the PhD thesis of Salim, Shilan (2021)
     # if conv==None:
     #     if delta is None:
-    target_value = 5950  # hardcoded for 6000 ripser points
+    # target_value = 5950  # hardcoded for 6000 ripser points
     target_value = 0.95*dist_matrix.shape[0]
     logger.info(f"The shape of the distance matrix is: {dist_matrix.shape[0]}")
-    # compare this value to the diameter of the space
+    # # compare this value to the diameter of the space
     diameter = np.max(dist_matrix)
-    logger.info(f"The diameter of the space is: {diameter}")
-    logger.info(f"The diameter of the space is: {1/diameter}")
-    logger.info(f"The diameter of the space is: {1/np.sqrt(diameter)}")
-    guess = 10
-    conv = guess_target_point(dist_matrix, target_value, guess=guess)
-    #     conv_target = conv
-    # else:
-    #     conv, conv_target = guess_target_point_v2(X, comp_mag, target_value, delta=delta, guess=guess)
-    low = 0
-    num_intervals = 100
-    ts = np.linspace(low, conv, num=num_intervals)
-    # print('The t intervals are', ts)
-    mag_area = []
+    diam_t = 1/diameter
+    # logger.info(f"The diameter of the space is: {diameter}")
+    # logger.info(f"1/diameter of the space is: {1/diameter}")
+    # logger.info(f"1/sqrt(diameter) of the space is: {1/np.sqrt(diameter)}")
+
+    # #compute all magnitude
+    # guess = 10
+    # conv = guess_target_point(dist_matrix, target_value, guess=guess)
+    # #low = 0.001
+    # low = 0 
+    # num_intervals = 100
+    # ts = np.linspace(low, conv, num=num_intervals)
+    # # print('The t intervals are', ts)
+    # mag_area = []
+
     # compute magnitude for all ts, and sum up to return the magnitude area
+    
+    # biggest_quant = 0
     # for t in ts:
+    #     if t == 0:
+    #         continue
     #     mag = magnitude_individual(dist_matrix, t=t)
+    #     quant = np.sqrt(np.log(mag))/(t*t)
+    #     if quant > biggest_quant:
+    #         biggest_quant = quant
     #     mag_area.append(mag)
     #     mag_area_final = sum(mag_area)
-    mean_t = ts[50]  # take the middle of the interval
-    diam_t = 1/diameter
-    logger.info(f"The selected t value is: {mean_t}")
+
+    # # print('The biggest quantity is,', biggest_quant)
+    # logger.info(f"The biggest quantity is: {biggest_quant}")
+    # mean_t = ts[50]  # take the middle of the interval
+    # logger.info(f"The selected t value is: {mean_t}")
     # mag = magnitude_individual(dist_matrix, t=mean_t)
     mag = magnitude_individual(dist_matrix, t=diam_t)
-    return mag, mean_t
-
+    return mag, 0
+    # return mag, mean_t
 
 def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str = None, t: float = 1., stem = ""):
     num_exp = len(seed_results.keys())
@@ -128,7 +139,9 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str = None, t: f
 
         # acc_gap_tab.append(seed_results[key]['acc_gap'])
         if 'worst_acc' in seed_results[key].keys():
-            acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
+            # acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
+            # the above produces NaNs, maybe acc_gap will work better
+            acc_gap_tab.append(seed_results[key]['acc_gap'])
         else:
             acc_gap_tab.append(seed_results[key]['acc_gap'])
         lr_tab.append(seed_results[key]['learning_rate'])

@@ -14,14 +14,50 @@ from scipy.stats import linregress
 from analysis.plot_magnitude import magnitude
 from analysis.kendall import granulated_kendall_from_dict
 
+from scipy.linalg import cho_factor, solve_triangular, solve
+from tqdm import tqdm
+from krypy.linsys import LinearSystem, Cg
+from scipy.optimize import toms748
+
+from sklearn.linear_model import LinearRegression
+
 
 # helper functions
 def func(x, a, b):
     return a * x + b
 
+def guess_target_point(X, target_value, guess=10):
+    # ts=[]
+    # mags=[]
+
+    def f(x, W=X):
+        # mag = comp_mag(W, ts=[x])
+        mag = magnitude_individual(W, t=x)
+        return mag - target_value
+
+    lower_guess = 0  # np.log(X.shape[0]-1)
+    f_guess = f(guess)
+    while (f_guess < 0):  # & (guess < 10**20)):
+        lower_guess = guess
+        guess = guess * 10
+        f_guess = f(guess)
+    max_iterations = 100
+    conv = toms748(f, lower_guess, guess, maxiter=max_iterations, rtol=1e-05)
+    # conv = mag_convergence(X, lower_guess, guess, f, max_iterations=100)
+
+    return conv
+
+def magnitude_individual(dist_matrix: np.ndarray, t: float = 1.) -> float:
+    # from the PhD thesis of Salim, Shilan (2021)
+    N = dist_matrix.shape[0]
+    w = np.ones(N) / N
+    linear_system = LinearSystem(np.exp(-t * dist_matrix), np.ones(N), self_adjoint=True, positive_definite=True)
+    w = Cg(linear_system, x0=w).xk
+    magnitude_weights = w.squeeze()
+    return magnitude_weights.sum()
+
 # Stupid function in place of the real one that Rayna is implementing
 def mag_dim(dist_matrix: np.ndarray,
-           ts: list,
            initial_interval: float = 0.,
            end_interval: float = 1.,
            seed: int = 42,
@@ -37,36 +73,32 @@ def mag_dim(dist_matrix: np.ndarray,
     assert dist_matrix.shape[0] == dist_matrix.shape[1], dist_matrix.shape
 
     # fit a line
+    target_value = 0.95*dist_matrix.shape[0]
+    logger.info(f"The shape of the distance matrix is: {dist_matrix.shape[0]}")
+
+    # #compute all magnitude
+    guess = 10
+    conv = guess_target_point(dist_matrix, target_value, guess=guess)
+    low = 1 
+    num_intervals = 100
+
+    logts = np.linspace(np.log(low), np.log(conv), num=num_intervals)
+
     magnitudes = []
-    for t in ts:
-        magnitude_single = magnitude(dist_matrix, t)
-        magnitudes.append(magnitude_single)
 
-    epsilon = 0.0001
+    for t in logts:
+        mag = magnitude_individual(dist_matrix, t=np.exp(t))
+        magnitudes.append(np.log(mag))
 
-    initial = initial_interval
-    end = end_interval
-
-    #potential setting of the values; needs to change per case
-    initial = np.log(ts[1]) - epsilon
-    end = np.log(ts[6]) + epsilon
-
-    # this needs to be automated
-    # initialguess = [3, 5]
-    x_dist = np.log(ts)
-    xdiff_norm = np.log(magnitudes[0])
-
-    mask = (x_dist > initial) & (x_dist < end)
-    fit, covariance = optimize.curve_fit(
-        func,
-        x_dist[mask],
-        xdiff_norm[mask])
-
-    plt.scatter(x_dist, xdiff_norm, label="data", s=2)
-    x_fit = np.linspace(x_dist[mask].min(), x_dist[mask].max(), 100)
-    y_fit = func(x_fit, *fit)
-    plt.plot(x_fit, y_fit, c="red", label="fit")
-    return linregress(x_fit, y_fit).slope
+    # use linear regression to compute the dimension
+    # X = logts
+    X = logts.reshape(-1, 1)
+    # print('X is ', X)
+    y = magnitudes
+    reg = LinearRegression().fit(X, y)
+    mag_dim_auto = reg.coef_[0]
+    logger.info(f"The dimension is {mag_dim_auto}")
+    return mag_dim_auto
 
 def plot_mag_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
     num_exp = len(seed_results.keys())
@@ -91,7 +123,7 @@ def plot_mag_dim_one_seed(seed_results: dict, ax, output_dir: str = None):
 
         dist_matrix = np.load(str(dist_matrix_path))
 
-        complexity = mag_dim(dist_matrix, alpha=alpha)
+        complexity = mag_dim(dist_matrix)
         mag_dim_tab.append(complexity)
 
         seed_results[key][complexity_key] = float(complexity)
