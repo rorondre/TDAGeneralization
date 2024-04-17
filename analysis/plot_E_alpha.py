@@ -13,7 +13,7 @@ from analysis.kendall import granulated_kendall_from_dict
 
 
 # Stupid function in place of the real one that Rayna is implementing
-def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 1.) -> float:
+def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 1., **kwargs) -> float:
 
     diagrams = ripser_parallel(dist_matrix, maxdim=0, n_threads=5, metric="precomputed")['dgms']
     d = diagrams[h_dim]
@@ -39,6 +39,7 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None, alpha: f
 
         # acc_gap_tab.append(seed_results[key]['acc_gap'])
         if 'worst_acc' in seed_results[key].keys():
+            # acc_gap_tab.append(seed_results[key]['loss_gap'])
             acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
         else:
             acc_gap_tab.append(seed_results[key]['acc_gap'])
@@ -148,8 +149,8 @@ def plot_E_alpha_all_seed(json_path: str, alpha: float = 1., stem: str=""):
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "E_alpha_vs_generalization_error.png"
 
-    ax.grid(visible=True, which="minor")
-    plt.grid(visible=True, which="minor")
+    ax.grid(visible=True, which="both")
+    plt.grid(visible=True, which="both")
 
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")

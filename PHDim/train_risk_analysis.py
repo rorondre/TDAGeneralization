@@ -47,7 +47,7 @@ def get_weights(net):
 
 
 def main(
-        iterations: int = 10000,
+        iterations: int = 1,
          batch_size_train: int = 100,
          batch_size_eval: int = 100,
          lr: float = 1.e-1,
@@ -74,7 +74,7 @@ def main(
          ripser_points: int = 500,
          jump: int = 20,
          additional_dimensions: bool = False,
-         data_proportion: float = 1.,
+         data_proportion: float = 0.01,
          proportion_eval: int = 500,
          id_lr: int = 0,
          pseudo_matrix_data_proportion: float = 0.01,
@@ -439,6 +439,7 @@ def main(
                                                         net, 
                                                         crit_unreduced, 
                                                         return_01=True)
+                    
                     assert losses.ndim == 1, losses.shape
                     assert len(losses) == pseudo_matrix_data_number, (losses.shape, pseudo_matrix_data_number)
                     # tr_hist, losses, _ = eval(train_loader_eval, net, crit_unreduced, opt)
@@ -529,7 +530,8 @@ def main(
                 "model": model,
                 "iterations": i,
                 "dataset": dataset,
-                "worst_acc": worst_gen
+                "worst_acc": worst_gen,
+                "n": data_number
             }
 
             save_distance_matrix_file_01 = (Path(save_distance_matrix_file).parent / \

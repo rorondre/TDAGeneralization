@@ -1,0 +1,18 @@
+{
+  "granulated Kendalls": {
+    "E_alpha_dist_matrix": {
+      "batch_size": NaN,
+      "learning_rate": 1.0,
+      "average granulated Kendall coefficient": NaN
+    },
+    "magnitude_dist_matrix": {
+      "batch_size": NaN,
+      "learning_rate": NaN,
+      "average granulated Kendall coefficient": NaN
+    }
+  },
+  "Kendall tau": {
+    "E_alpha_dist_matrix": 0.8164965809277261,
+    "magnitude_dist_matrix": NaN
+  }
+}

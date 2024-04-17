@@ -87,8 +87,8 @@ def granulated_kendall_from_dict(results: dict,
 
 # Unused at the moment
 def granulated_kendall_from_json(json_path: str,
-                                 generalization_key: str = "loss_gap",
-                                 complexity_keys: List[str] = ["ph_dim_euclidean", "ph_dim_losses_based"],
+                                 generalization_key: str = "acc_gap",
+                                 complexity_keys: List[str] = ["magnitude"],
                                  hyperparameters_keys: List[str] = ["batch_size", "learning_rate"]):
 
     if not Path(json_path).exists():
@@ -143,8 +143,12 @@ def granulated_kendall_from_json(json_path: str,
                                   if all([results[key][hyp] == other_hyp_set[i]
                                           for i, hyp in enumerate(other_hyperparameters)])]
 
-                ktau = kendalltau(gen_tab, complexity_tab)
-                kendall += ktau.correlation / m
+                if len(gen_tab) > 2:
+                    ktau = kendalltau(gen_tab, complexity_tab)
+                    kendall += ktau.correlation / m
+                else:
+                    kendall += 0.
+                    logger.warning("Hyperparameter found with only one finished experiment!")
                 # TODO: the kendalltau function computes p-values, they should be logged in as well
 
             granulated_kendalls[complexity][hyperparameter] = kendall

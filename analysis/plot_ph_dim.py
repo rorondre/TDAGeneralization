@@ -1,4 +1,5 @@
 import json
+import multiprocessing
 from pathlib import Path
 
 import fire
@@ -13,6 +14,62 @@ from analysis.plot_E_alpha import E_alpha
 from analysis.kendall import granulated_kendall_from_dict
 from analysis.pearson import granulated_pearson_from_dict
 
+def ph_dim_multiprocessing(dist_matrix: np.ndarray,
+           min_points=1,
+           max_points=None,
+           point_jump=50,
+           h_dim=0,
+           seed: int = 42,
+           alpha: float = 1.,
+           **kwargs) -> float:
+    """
+    This function:
+     - takes as an input a distance matrix
+     - use it to compute PH dim
+
+    :param dm: distance matrix, should be of shape (N, N)
+    """
+    assert dist_matrix.ndim == 2, dist_matrix
+    assert dist_matrix.shape[0] == dist_matrix.shape[1], dist_matrix.shape
+
+    np.random.seed(seed)
+
+    if max_points is None:
+        max_points = dist_matrix.shape[0]
+    assert max_points <= dist_matrix.shape[0], (max_points, dist_matrix.shape[0])
+
+    test_n = range(min_points, max_points, point_jump)
+    lengths = []
+
+    # creating the sample indices
+    indices_list = []
+    for points_number in test_n:
+        sample_indices = np.random.choice(dist_matrix.shape[0], points_number, replace=False)
+        indices_list.append(sample_indices)
+
+    pool = multiprocessing.Pool(10)
+    def f(s):
+        dist_matrix_temp = dist_matrix[s, :][:, s]
+        alpha_sum = E_alpha(dist_matrix_temp, h_dim=0, alpha=alpha)
+
+    lengths = pool.map(f, indices_list)
+
+    # compute our ph dim by running a linear least squares
+    x = np.log(np.array(list(test_n)))
+    y = np.log(lengths)
+    N = len(x)
+    m = (N * (x * y).sum() - x.sum() * y.sum()) / (N * (x ** 2).sum() - x.sum() ** 2)
+    b = y.mean() - m * x.mean()
+
+    error = ((y - (m * x + b)) ** 2).mean()
+
+    logger.debug(f"ph Dimension Calculation has an approximate error of: {error}.")
+
+    return alpha / (1 - m)
+
+
+
+
 
 # Stupid function in place of the real one that Rayna is implementing
 def ph_dim(dist_matrix: np.ndarray,
@@ -21,7 +78,8 @@ def ph_dim(dist_matrix: np.ndarray,
            point_jump=200,
            h_dim=0,
            seed: int = 42,
-           alpha: float = 1.) -> float:
+           alpha: float = 1.,
+           **kwargs) -> float:
     """
     This function:
      - takes as an input a distance matrix
@@ -111,6 +169,7 @@ def plot_ph_dim_one_seed(seed_results: dict,\
         
         # acc_gap_tab.append(seed_results[key]['acc_gap'])
         if 'worst_acc' in seed_results[key].keys():
+            # acc_gap_tab.append(seed_results[key]['loss_gap'])
             acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
         else:
             acc_gap_tab.append(seed_results[key]['acc_gap'])
@@ -122,7 +181,7 @@ def plot_ph_dim_one_seed(seed_results: dict,\
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
 
-        dist_matrix = np.load(str(dist_matrix_path))
+        dist_matrix = np.load(str(dist_matrix_path)) / 50000
 
         complexity = ph_dim(dist_matrix, min_points=min_points, max_points=max_points)
         ph_dim_tab.append(complexity)
@@ -220,8 +279,8 @@ def plot_ph_dim_all_seed(json_path: str, \
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "ph_dim_vs_generalization_error.png"
 
-    ax.grid(visible=True, which="minor")
-    plt.grid(visible=True, which="minor")
+    ax.grid(visible=True, which="both")
+    plt.grid(visible=True, which="both")
 
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")
