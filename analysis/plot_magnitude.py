@@ -83,6 +83,12 @@ def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
     #     if delta is None:
     target_value = 5950  # hardcoded for 6000 ripser points
     target_value = 0.95*dist_matrix.shape[0]
+    logger.info(f"The shape of the distance matrix is: {dist_matrix.shape[0]}")
+    # compare this value to the diameter of the space
+    diameter = np.max(dist_matrix)
+    logger.info(f"The diameter of the space is: {diameter}")
+    logger.info(f"The diameter of the space is: {1/diameter}")
+    logger.info(f"The diameter of the space is: {1/np.sqrt(diameter)}")
     guess = 10
     conv = guess_target_point(dist_matrix, target_value, guess=guess)
     #     conv_target = conv
@@ -99,11 +105,14 @@ def magnitude(dist_matrix: np.ndarray, t: float = 1.) -> float:
     #     mag_area.append(mag)
     #     mag_area_final = sum(mag_area)
     mean_t = ts[50]  # take the middle of the interval
-    mag = magnitude_individual(dist_matrix, t=mean_t)
+    diam_t = 1/diameter
+    logger.info(f"The selected t value is: {mean_t}")
+    # mag = magnitude_individual(dist_matrix, t=mean_t)
+    mag = magnitude_individual(dist_matrix, t=diam_t)
     return mag, mean_t
 
 
-def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str = None, t: float = 1.):
+def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str = None, t: float = 1., stem = ""):
     num_exp = len(seed_results.keys())
     logger.info(f"Found {num_exp} experiments")
 
@@ -127,7 +136,9 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str = None, t: f
 
         t_value = seed_results[key]['LB_ratio']
 
-        dist_matrix_path = Path(seed_results[key]["saved_distance_matrix"])
+        dist_matrix_path = Path(seed_results[key]["saved_distance_matrix" + stem])
+        logger.info(f"Using distance matrix {str(dist_matrix_path)}")
+
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
 
@@ -194,7 +205,7 @@ def plot_magnitude_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_magnitude_all_seed(json_path: str, t: float = 0.1):
+def plot_magnitude_all_seed(json_path: str, t: float = 0.1, stem=""):
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
 
@@ -204,6 +215,8 @@ def plot_magnitude_all_seed(json_path: str, t: float = 0.1):
     logger.info(f"Found {len(results.keys())} random seeds")
 
     new_results = {}
+
+    # stem = "_euclidean"
 
     assert stem in ["", "_euclidean", "_01"], stem
 

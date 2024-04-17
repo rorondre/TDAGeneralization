@@ -199,8 +199,8 @@ def generate_run_commands(command_list: List[str], num_cpus: int = 1, num_gpus: 
         cluster_cmds = []
 
         if num_gpus >= 1:
-            partition_string = "#SBATCH --partition=General_Usage\n" + \
-                               f"#SBATCH --gres=gpu:gtx-1080:{num_gpus}\n"
+            partition_string = "#SBATCH --partition=PGR-Standard\n" + \
+                               f"#SBATCH --gres=gpu:gtx-2080ti:{num_gpus}\n"
         else:
             partition_string = "#SBATCH --partition=General_Usage\n"
 

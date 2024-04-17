@@ -58,7 +58,7 @@ def magnitude(dist_matrix: np.ndarray, t: float = 35.) -> float:
 
 
 
-def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: float=1., stem: str=""):
+def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: float=1., stem: str="_01"):
 
     num_exp = len(seed_results.keys())
     logger.info(f"Found {num_exp} experiments")
@@ -74,25 +74,26 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
 
         # acc_gap_tab.append(seed_results[key]['acc_gap'])
         if 'worst_acc' in seed_results[key].keys():
-            acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
+            acc_gap_tab.append(seed_results[key]['acc_gap'])
         else:
             acc_gap_tab.append(seed_results[key]['acc_gap'])
         lr_tab.append(seed_results[key]['learning_rate'])
         bs_tab.append(seed_results[key]['batch_size'])
 
         dist_matrix_path = Path(seed_results[key]["saved_distance_matrix" + stem])
+        print('We are using this matrix', dist_matrix_path)
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
         
         dist_matrix = np.load(str(dist_matrix_path))
 
-        # epsilon = 0.01
+        #epsilon = 0.01
         # # t = np.sqrt(n) / np.max(dist_matrix[np.nonzero(dist_matrix)])
         # t = np.log(5000) / epsilon
         # logger.info(f'Theoretical value of t: {t}')
 
         complexity = magnitude(dist_matrix, t=t)
-        # complexity = 1. / (1. / complexity - np.exp(-t * epsilon))
+        #complexity = 1. / (1. / complexity - np.exp(-t * epsilon))
         logger.info(f"Complexity: {complexity}") 
 
         magnitude_tab.append(complexity)
@@ -155,7 +156,7 @@ def plot_magnitude_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_magnitude_all_seed(json_path: str, t:float=0.01, stem:str=""):
+def plot_magnitude_all_seed(json_path: str, t:float=0.01, stem:str="_01"):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)

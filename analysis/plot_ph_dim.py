@@ -185,7 +185,7 @@ def plot_ph_dim_one_seed_from_json(json_path: str):
 
 def plot_ph_dim_all_seed(json_path: str, \
                         min_points: int = 200,
-                         max_points: int = 2000,
+                         max_points: int = 5000,
                          stem: str=""):
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)

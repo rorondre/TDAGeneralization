@@ -46,6 +46,8 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None, alpha: f
         bs_tab.append(seed_results[key]['batch_size'])
 
         dist_matrix_path = Path(seed_results[key]["saved_distance_matrix" + stem])
+        logger.info(f"Using distance matrix {str(dist_matrix_path)}")
+
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
         
@@ -112,7 +114,7 @@ def plot_E_alpha_one_seed_from_json(json_path: str):
     plt.close()
 
 
-def plot_E_alpha_all_seed(json_path: str, alpha: float = 1., stem: str=""):
+def plot_E_alpha_all_seed(json_path: str, alpha: float = 1., stem: str="_01"):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
