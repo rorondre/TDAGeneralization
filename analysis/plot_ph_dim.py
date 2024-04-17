@@ -20,7 +20,8 @@ def ph_dim_multiprocessing(dist_matrix: np.ndarray,
            point_jump=50,
            h_dim=0,
            seed: int = 42,
-           alpha: float = 1.) -> float:
+           alpha: float = 1.,
+           **kwargs) -> float:
     """
     This function:
      - takes as an input a distance matrix
@@ -77,7 +78,8 @@ def ph_dim(dist_matrix: np.ndarray,
            point_jump=200,
            h_dim=0,
            seed: int = 42,
-           alpha: float = 1.) -> float:
+           alpha: float = 1.,
+           **kwargs) -> float:
     """
     This function:
      - takes as an input a distance matrix
@@ -277,8 +279,8 @@ def plot_ph_dim_all_seed(json_path: str, \
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "ph_dim_vs_generalization_error.png"
 
-    ax.grid(visible=True, which="minor")
-    plt.grid(visible=True, which="minor")
+    ax.grid(visible=True, which="both")
+    plt.grid(visible=True, which="both")
 
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")

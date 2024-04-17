@@ -222,8 +222,8 @@ def plot_magnitude_all_seed(json_path: str, t: float = 0.1):
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "magnitude_vs_generalization_error.png"
 
-    ax.grid(visible=True, which="minor")
-    plt.grid(visible=True, which="minor")
+    ax.grid(visible=True, which="both")
+    plt.grid(visible=True, which="both")
 
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")

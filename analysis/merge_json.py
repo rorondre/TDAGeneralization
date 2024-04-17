@@ -29,7 +29,7 @@ def merge_json(result_dir: str):
         for p in json_list:
             with open(str(p), "r") as json_file:
                 res = json.load(json_file)
-                res["worst_acc"] = res["worst_acc"]
+                # res["worst_acc"] = res["worst_acc"] # Why was this here??
                 seed_results.update({str(n): res})
             n += 1
         final_results.update({str(seed.stem): seed_results})

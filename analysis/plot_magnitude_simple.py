@@ -45,7 +45,7 @@ def magnitude_cloesky(dist_matrix: np.ndarray, t: float = 1.) -> float:
     return x.T @ x
 
 
-def magnitude(dist_matrix: np.ndarray, t: float = 35.) -> float:
+def magnitude(dist_matrix: np.ndarray, t: float = 35., **kwargs) -> float:
 
     # from the PhD thesis of Salim, Shilan (2021)
     N=dist_matrix.shape[0]
@@ -55,6 +55,25 @@ def magnitude(dist_matrix: np.ndarray, t: float = 35.) -> float:
     magnitude_weights = w.squeeze()
 
     return magnitude_weights.sum()
+
+def magnitude_chaining(dist_matrix: np.ndarray,\
+                        t_min: float = 1., 
+                        t_max: float = 100.,
+                        n_points: int = 10,
+                         **kwargs) -> float:
+
+    ts = np.exp(np.linspace(np.log(t_min), np.log(t_max), n_points))
+    integrands = []
+
+    for k in range(len(ts)):
+        mag = magnitude(dist_matrix, ts[k])
+        integrands.append(np.sqrt(np.log(mag)) / (ts[k]**2))
+
+    integrands = np.array(integrands)
+
+    integral = (integrands[:-1] * (ts[1:] - ts[:-1])).sum()
+
+    return integral
 
 
 
@@ -85,16 +104,19 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
         
-        n = 50000
-        dist_matrix = np.load(str(dist_matrix_path)) / n
+        n = 5000
+        if stem in ["", "_01"]:
+            dist_matrix = np.load(str(dist_matrix_path)) / n
+        else:
+            dist_matrix = np.load(str(dist_matrix_path)) 
 
-        epsilon = 1. / np.sqrt(n)
+        # epsilon = 1. / np.sqrt(n)
         # # t = np.sqrt(n) / np.max(dist_matrix[np.nonzero(dist_matrix)])
-        t = (np.log(5000) / epsilon) 
-        logger.info(f'Value of t: {t}')
+        # t = (np.log(5000) / epsilon) 
+        # logger.info(f'Value of t: {t}')
 
-        complexity = magnitude(dist_matrix, t=t)
-        complexity = 1. / (1. / complexity - np.exp(-t * epsilon))
+        complexity = magnitude_chaining(dist_matrix)
+        # complexity = 1. / (1. / complexity - np.exp(-t * epsilon))
         logger.info(f"Complexity: {complexity}") 
 
         magnitude_tab.append(complexity)
@@ -186,8 +208,8 @@ def plot_magnitude_all_seed(json_path: str, t:float=0.01, stem:str=""):
         output_dir.mkdir(parents=True, exist_ok=True)
     save_path = output_dir / "magnitude_vs_generalization_error.png"
 
-    ax.grid(visible=True, which="minor")
-    plt.grid(visible=True, which="minor")
+    ax.grid(visible=True, which="both")
+    plt.grid(visible=True, which="both")
 
     plt.savefig(str(save_path))
     logger.info(f"Saved figure in {str(save_path)}")
