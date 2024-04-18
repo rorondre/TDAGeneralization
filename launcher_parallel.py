@@ -14,11 +14,11 @@ from loguru import logger
 
 # Path to initial weights
 # For ViT, CIFAR10:
-# WEIGHT_FILE = "weights/checkpoint_95_3.pth"
+WEIGHT_FILE = "weights/checkpoint_95_3.pth"
 # For ViT, CIFAR100:
 # WEIGHT_FILE = "weights/vit_cifar100_check.pth"
 # For Swin, CIFAR10:
-WEIGHT_FILE = "weights/swin_cifar10_properly_pretrained.pth"
+# WEIGHT_FILE = "weights/swin_cifar10_properly_pretrained.pth"
 # For Swin, CIFAR100:
 # WEIGHT_FILE = "weights/checkpoint_swin_cifar100_check.pth"
 # For CaiT, CIFAR10:
@@ -183,8 +183,8 @@ if __name__ == '__main__':
     parser.add_argument('--num_gpus', type=int, default=1)
 
     # Variation of learning rate and batch size --> GRID
-    parser.add_argument('--lr_min', type=float, default=1.e-6)
-    parser.add_argument('--lr_max', type=float, default=1.e-4)
+    parser.add_argument('--lr_min', type=float, default=1.e-5)
+    parser.add_argument('--lr_max', type=float, default=1.e-3)
     parser.add_argument('--bs_min', type=int, default=8)
     parser.add_argument('--bs_max', type=int, default=512)
     parser.add_argument('--n_lr', type=int, default=6)

@@ -12,7 +12,6 @@ from tqdm import tqdm
 
 from analysis.plot_ph_dim import ph_dim
 from analysis.plot_E_alpha import E_alpha
-from analysis.plot_magnitude import ... as magnitude_rayna
 from analysis.plot_magnitude_simple import magnitude as magnitude_simple
 from analysis.kendall import granulated_kendall_from_dict
 from analysis.plot_from_json import plot_from_dict

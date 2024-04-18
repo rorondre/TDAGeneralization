@@ -57,12 +57,13 @@ def magnitude(dist_matrix: np.ndarray, t: float = 35., **kwargs) -> float:
     return magnitude_weights.sum()
 
 def magnitude_chaining(dist_matrix: np.ndarray,\
-                        t_min: float = 1., 
-                        t_max: float = 100.,
+                        t_min: float = 0.01, 
+                        t_max: float = 1.,
                         n_points: int = 10,
                          **kwargs) -> float:
 
-    ts = np.exp(np.linspace(np.log(t_min), np.log(t_max), n_points))
+    # ts = np.linspace(t_min, t_max, n_points)
+    ts = np.exp(np.linspace(np.log(t_min), np.log(t_max)))
     integrands = []
 
     for k in range(len(ts)):
@@ -70,6 +71,8 @@ def magnitude_chaining(dist_matrix: np.ndarray,\
         integrands.append(np.sqrt(np.log(mag)) / (ts[k]**2))
 
     integrands = np.array(integrands)
+    selected_index = np.argmax(integrands)
+    logger.info(f"Selected scale of the magnitude: {ts[selected_index]}")
 
     integral = (integrands[:-1] * (ts[1:] - ts[:-1])).sum()
 
@@ -101,7 +104,6 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
         bs_tab.append(seed_results[key]['batch_size'])
 
         dist_matrix_path = Path(seed_results[key]["saved_distance_matrix" + stem])
-        print('We are using this matrix', dist_matrix_path)
         if not dist_matrix_path.exists():
             raise FileNotFoundError(str(dist_matrix_path))
         
@@ -179,7 +181,7 @@ def plot_magnitude_one_seed_from_json(json_path: str):
 
     plt.close()
 
-def plot_magnitude_all_seed(json_path: str, t:float=0.1, stem:str="_euclidean"):
+def plot_magnitude_all_seed(json_path: str, t:float=0.1, stem:str=""):
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
