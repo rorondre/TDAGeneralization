@@ -11,12 +11,10 @@ from loguru import logger
 
 from models import alexnet, fc_mnist, vgg, fc_cifar, lenet, vit
 from models.build_model import create_model
-
 from models.vit import VisionTransformer
 from models.swin import SwinTransformer
 from models.cait import cait_models
 from functools import partial
-
 from models.vgg import vgg as make_vgg
 from topology import fast_ripser
 from utils import accuracy, LabelSmoothingCrossEntropy
@@ -81,7 +79,10 @@ def main(
          freeze: bool=False,
          compute_euclidean_dimension: bool=False,
          worst_case_gen_freq: int = None,
-         JL_projection: float = None):
+         JL_projection: float = None,
+         compute_activation_dimension: float = True,
+         additional_identifier: str = "",
+         pseudo_metric_type: str = "manhattan"):
 
 
     # Creating files to save results
@@ -103,6 +104,8 @@ def main(
                                                          batch_size_train,
                                                          batch_size_eval,
                                                          subset=data_proportion)
+    # HACK! TODO change it
+    n_classes = num_classes
 
     # Number of datapoints
     data_number = len(train_loader.sampler)
@@ -359,6 +362,7 @@ def main(
     weights_history = deque([])
     loss_history = deque([])
     loss_01_history = deque([])
+    softmax_history = deque([])
 
     STOP = False  # Do we have enough point for persistent homology
     CONVERGED = False  # has the experiment converged?
@@ -434,11 +438,16 @@ def main(
                     # clear cache
                     # torch.cuda.empty_cache()
 
-                    tr_hist, losses, _, losses_01 = eval_on_tensors(eval_x[:pseudo_matrix_data_number,...],\
+                    tr_hist, losses, out, losses_01 = eval_on_tensors(eval_x[:pseudo_matrix_data_number,...],\
                                                         eval_y[:pseudo_matrix_data_number,...], 
                                                         net, 
                                                         crit_unreduced, 
                                                         return_01=True)
+
+                    assert out.shape == (pseudo_matrix_data_number, n_classes), \
+                                                (out.shape, (pseudo_matrix_data_number, n_classes))
+                    if compute_activation_dimension:
+                        softmax_history.append(torch.softmax(out, dim=1).flatten())
                     
                     assert losses.ndim == 1, losses.shape
                     assert len(losses) == pseudo_matrix_data_number, (losses.shape, pseudo_matrix_data_number)
@@ -499,12 +508,19 @@ def main(
             loss_01_history_np = torch.stack(tuple(loss_01_history)).cpu().numpy().astype(np.int32)
 
             metric = 'euclidean'
-            metric_pseudo = 'manhattan'
+            metric_pseudo = pseudo_metric_type
+
+            if metric_pseudo not in ["euclidean", "manhattan"]:
+                raise NotImplementedError(f"pseudo_metric_type should be either euclidean or manhattan, got {metric_pseudo}")
 
             if compute_euclidean_dimension:
                 distance_matrix_euclidean = pairwise_distances(weights_history_np, metric=metric)
             pseudo_distance_matrix = pairwise_distances(loss_history_np, metric=metric_pseudo)
             pseudo_distance_matrix_01 = pairwise_distances(loss_01_history_np, metric=metric_pseudo)
+
+            if compute_activation_dimension:
+                softmax_history_np = torch.stack(tuple(softmax_history)).cpu().numpy()
+                distance_matrix_softmax = pairwise_distances(softmax_history_np, metric=metric)
 
             test_acc = evaluation_history_TEST[-1][2]
             train_acc = evaluation_history_TRAIN[-1][2]
@@ -531,7 +547,8 @@ def main(
                 "iterations": i,
                 "dataset": dataset,
                 "worst_acc": worst_gen,
-                "n": data_number
+                "n": data_number,
+                "pseudo_matrix_data_proportion": pseudo_matrix_data_proportion
             }
 
             save_distance_matrix_file_01 = (Path(save_distance_matrix_file).parent / \
@@ -556,6 +573,16 @@ def main(
                     exp_dict["saved_distance_matrix_euclidean"] = "non_computed"
                     logger.info("Not computing Euclidean distance matrix, as specified by arguments")
 
+                if compute_activation_dimension:
+                    softmax_dm_file = (Path(save_distance_matrix_file).parent / \
+                                        (Path(save_distance_matrix_file).stem + "_softmax")).with_suffix(".npy")
+                    logger.info(f"Saving softmax distance matrix in {str(save_distance_matrix_file)} ✅")
+                    np.save(str(softmax_dm_file), distance_matrix_softmax)
+                    exp_dict["saved_distance_matrix_softmax"] = str(softmax_dm_file)
+                else:
+                    exp_dict["saved_distance_matrix_softmax"] = "non_computed"
+                    logger.info("Not computing softmax distance matrix, as specified by arguments")
+
             else:
                 logger.warning("No distance matrix has been saved")
 
@@ -576,7 +603,7 @@ def main(
         logger.warning("Weights are not saved, as specified by arguments.")
 
     # Saving Exp_dict
-    exp_dict_path = save_folder / f"exp_lr_{id_lr}_bs_{batch_size_train}.json"
+    exp_dict_path = save_folder / f"exp_lr_{id_lr}_bs_{batch_size_train}_{additional_identifier}.json"
     with open(str(exp_dict_path), 'w') as exp_dict_file:
         json.dump(exp_dict, exp_dict_file, indent=2)
 

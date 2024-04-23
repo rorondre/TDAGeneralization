@@ -81,58 +81,74 @@ def main(args_):
     command_list = []
     exp_num = 0 # Count the total number of exps that have been launched
 
-    for j in range(args.num_seeds_per_hparam):
-    
-        for b in range(len(bss)):
-            for e in range(len(lrs)):
+    if args_.batch_experiment > 0:
+        logger.warning("Performing the batch experiment, pseudo_matrix_data_proportion will be ignored")
+        pseudo_proportions = list(np.linspace(0.1, 1., args_.batch_experiment))
+    else:
+        pseudo_proportions = [args_.pseudo_matrix_data_proportion]
+    logger.info(f"Used pseudo proportions :{pseudo_proportions}")
 
-                # transfer flags from the args
-                flags = copy.deepcopy(args.__dict__)
-                [flags.pop(key) for key in
-                ['num_cpus', 'num_gpus',\
-                'num_seeds_per_hparam', 'seed',
-                'date',
-                "n_lr", "n_bs", "lr_min", "lr_max", "bs_min", "bs_max",
-                "save_weights", "result_dir", "weight_file"]]
+    for pp in pseudo_proportions:
+        for j in range(args.num_seeds_per_hparam):
+        
+            for b in range(len(bss)):
+                for e in range(len(lrs)):
 
-                # randomly sample flags
-                for flag in default_configs:
-                    if flag in search_ranges:
-                        flags[flag] = sample_flag(sample_spec=search_ranges[flag], rds=rds)
+                    # transfer flags from the args
+                    flags = copy.deepcopy(args.__dict__)
+                    [flags.pop(key) for key in
+                    ['num_cpus', 'num_gpus',\
+                    'num_seeds_per_hparam', 'seed',
+                    'date',
+                    "n_lr", "n_bs", "lr_min", "lr_max", "bs_min", "bs_max",
+                    "save_weights", "result_dir", "weight_file", "batch_experiment"]]
+
+                    # randomly sample flags
+                    for flag in default_configs:
+                        if flag in search_ranges:
+                            flags[flag] = sample_flag(sample_spec=search_ranges[flag], rds=rds)
+                        else:
+                            flags[flag] = default_configs[flag]
+
+                    flags['id_lr'] = e
+                    flags['lr'] = lrs[e]
+                    flags['batch_size_train'] = bss[b]
+                    flags['seed'] = init_seeds[j]
+                    flags['pseudo_matrix_data_proportion'] = float(pp)
+
+                    # HACK
+                    if args_.batch_experiment > 0:
+                        additional_identifier = str(int(100. * pp))
                     else:
-                        flags[flag] = default_configs[flag]
+                        additional_identifier = ""
+                    flags["additional_identifier"] = additional_identifier
 
-                flags['id_lr'] = e
-                flags['lr'] = lrs[e]
-                flags['batch_size_train'] = bss[b]
-                flags['seed'] = init_seeds[j]
+                    run_results_folder = exp_path / str(init_seeds[j])
+                    if not run_results_folder.is_dir():
+                        run_results_folder.mkdir(parents=True, exist_ok=True)
+                    logger.info(f"{str(run_results_folder)}")
 
-                run_results_folder = exp_path / str(init_seeds[j])
-                if not run_results_folder.is_dir():
-                    run_results_folder.mkdir(parents=True, exist_ok=True)
-                logger.info(f"{str(run_results_folder)}")
+                    weights_dir = run_results_folder / "weights" 
+                    if args_.save_weights == 1:
+                        flags["save_weights_file"] = str(weights_dir / f"weights_{exp_num}.pth")
+                    if not weights_dir.is_dir():
+                        weights_dir.mkdir(parents=True, exist_ok=True)
 
-                weights_dir = run_results_folder / "weights" 
-                if args_.save_weights == 1:
-                    flags["save_weights_file"] = str(weights_dir / f"weights_{exp_num}.pth")
-                if not weights_dir.is_dir():
-                    weights_dir.mkdir(parents=True, exist_ok=True)
+                    dist_matrix_dir = run_results_folder/ "distance_matrices" 
+                    flags["save_distance_matrix_file"] = str(dist_matrix_dir / f"dist_matrix_{exp_num}.npy")
+                    if not dist_matrix_dir.is_dir():
+                        dist_matrix_dir.mkdir(parents=True, exist_ok=True)
 
-                dist_matrix_dir = run_results_folder/ "distance_matrices" 
-                flags["save_distance_matrix_file"] = str(dist_matrix_dir / f"dist_matrix_{exp_num}.npy")
-                if not dist_matrix_dir.is_dir():
-                    dist_matrix_dir.mkdir(parents=True, exist_ok=True)
+                    if args_.weight_file == 1:
+                        flags["weight_file"] = WEIGHT_FILE     
 
-                if args_.weight_file == 1:
-                    flags["weight_file"] = WEIGHT_FILE     
+                    flags['save_folder'] = str(run_results_folder)
 
-                flags['save_folder'] = str(run_results_folder)
+                    cmd = generate_base_command(run_exp,
+                                                flags=dict(**flags))
+                    command_list.append(cmd)
 
-                cmd = generate_base_command(run_exp,
-                                            flags=dict(**flags))
-                command_list.append(cmd)
-
-                exp_num+=1
+                    exp_num+=1
 
     # submit jobs
     generate_run_commands(command_list, 
@@ -162,6 +178,11 @@ PYTHONPATH=$PWD python launcher_parallel.py --compute_euclidean_dimension 1 --JL
 """
 
 """
+Test Commmand VIT - CIFAR10 - Batch experiment
+PYTHONPATH=$PWD python launcher_parallel.py --batch_experiment 2 --compute_euclidean_dimension 0 --num_gpus 1 --num_cpus 1 --n_lr 1 --n_bs 1 --result_dir tests_directory --num_seeds_per_hparam 1 --dataset cifar10 --model vit --iterations 2 --ripser_points 3 --min_points 1 --weight_file 1 --data_proportion 0.001 --bs_max 4 --bs_min 2
+"""
+
+"""
 Test Commmand VIT Informatics cluster
 PYTHONPATH=$PWD python launcher_parallel.py --mode informatics_slurm --num_gpus 1 --num_cpus 1 --n_lr 1 --n_bs 1 --result_dir tests_directory --num_seeds_per_hparam 1 --dataset cifar10 --model vit --iterations 2 --ripser_points 3 --min_points 1 --weight_file 1 --data_proportion 0.001 --bs_max 4 --bs_min 2
 """
@@ -183,12 +204,12 @@ if __name__ == '__main__':
     parser.add_argument('--num_gpus', type=int, default=1)
 
     # Variation of learning rate and batch size --> GRID
-    parser.add_argument('--lr_min', type=float, default=1.e-5)
+    parser.add_argument('--lr_min', type=float, default=1.e-4)
     parser.add_argument('--lr_max', type=float, default=1.e-3)
-    parser.add_argument('--bs_min', type=int, default=8)
+    parser.add_argument('--bs_min', type=int, default=64)
     parser.add_argument('--bs_max', type=int, default=512)
-    parser.add_argument('--n_lr', type=int, default=6)
-    parser.add_argument('--n_bs', type=int, default=6)
+    parser.add_argument('--n_lr', type=int, default=1)
+    parser.add_argument('--n_bs', type=int, default=1)
 
     # Parameters which are launcher specific
     parser.add_argument('--seed', type=int, default=SEED)
@@ -209,17 +230,24 @@ if __name__ == '__main__':
     parser.add_argument('--optim', type=str, default="Adam") # Optimizer
     parser.add_argument('--min_points', type=int, default=200) # Not used anymore
     parser.add_argument('--save_weights', type=int, default=0) # whether to save the weights
-    parser.add_argument('--compute_dimensions', type=int, default=1) # Always use 1, if 0 no distance matrices
+    parser.add_argument('--compute_dimensions', type=int, default=1) # Always use 1, if 0 no distance matrices are computed
     parser.add_argument('--weight_file', type=int, default=1)  # Whether to user the initial weights
     parser.add_argument('--ripser_points', type=int, default=5000) # Nb of iterations after convergence
     parser.add_argument('--data_proportion', type=float, default=1.) # subset of the data used for training (everything). Always use 1.
     parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.1) # proportion of data for the pseudo distance matrix
     parser.add_argument('--freeze', type=int, default=0) # Experimental, whether to freeze everything but the head. ONLY FOR VIT
-    parser.add_argument('--compute_euclidean_dimension', type=int, default=1) # whether to compute the Euclidean distance matrices
+    parser.add_argument('--compute_euclidean_dimension', type=int, default=0) # whether to compute the Euclidean distance matrices
     parser.add_argument('--proportion_eval', type=int, default=50000) # not used anymore
     parser.add_argument('--worst_case_gen_freq', type=int, default=100) # frequency to compute test accuracy. If you dont want it, use 100000000000
     parser.add_argument('--JL_projection', type=float, default=0.05) # frequency to compute test accuracy. If you dont want it, use 100000000000
+    parser.add_argument('--compute_softmax_dimension', type=int, default=0) # whether to compute the Euclidean distance matrices
+    parser.add_argument('--pseudo_metric_type', type=str, default="euclidean") # Is the pseudometric based on l1 or l2 distance
     
+    
+    # The following is a slightly hacky argument to perform the batch proportion experiment
+    # in the computation of the pseudo distance matrix
+    # This argument is launcher-specific
+    parser.add_argument('--batch_experiment', type=int, default=0) # whether to compute the Euclidean distance matrices
     
     # Unused arguments, needing to be implemented or removed
     parser.add_argument('--jump', type=int, default=1) # unused at the moment

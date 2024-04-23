@@ -79,6 +79,28 @@ def magnitude_chaining(dist_matrix: np.ndarray,\
     return integral
 
 
+def magnitude_integral(dist_matrix: np.ndarray,\
+                        t_min: float = 0.01, 
+                        t_max: float = np.sqrt(50000),
+                        n_points: int = 10,
+                         **kwargs) -> float:
+
+    # ts = np.linspace(t_min, t_max, n_points)
+    ts = np.exp(np.linspace(np.log(t_min), np.log(t_max)))
+    integrands = []
+
+    for k in range(len(ts)):
+        mag = magnitude(dist_matrix, ts[k])
+        integrands.append(np.sqrt(np.log(mag)) / (ts[k]))
+
+    integrands = np.array(integrands)
+    selected_index = np.argmax(integrands)
+    logger.info(f"Selected scale of the magnitude: {ts[selected_index]}")
+
+    integral = (integrands[:-1] * (ts[1:] - ts[:-1])).sum()
+
+    return integral
+
 
 def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: float=1., stem: str="_01"):
 

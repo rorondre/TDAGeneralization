@@ -55,7 +55,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_1.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_1.pth",
       "E_alpha": 0.010314702987670898,
-      "magnitude": 0.000492518998450368
+      "magnitude": 0.0
     },
     "3": {
       "train_acc": 9.375,
@@ -74,7 +74,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_3.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_3.pth",
       "E_alpha": 0.021999120712280273,
-      "magnitude": 0.0010657941193401486
+      "magnitude": 0.0
     }
   },
   "85082": {
@@ -133,7 +133,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_5.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_5.pth",
       "E_alpha": 0.03090834617614746,
-      "magnitude": 0.0017723017504867613
+      "magnitude": 0.0
     },
     "3": {
       "train_acc": 9.433961868286133,
@@ -152,7 +152,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_7.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_7.pth",
       "E_alpha": 0.039913177490234375,
-      "magnitude": 0.002025103337237042
+      "magnitude": 0.0
     }
   }
 }

@@ -13,28 +13,39 @@ from tqdm import tqdm
 from analysis.plot_ph_dim import ph_dim
 from analysis.plot_E_alpha import E_alpha
 from analysis.plot_magnitude_simple import magnitude as magnitude_simple
+from analysis.plot_magnitude_simple import magnitude_integral
 from analysis.kendall import granulated_kendall_from_dict
+from analysis.pearson import granulated_pearson_from_dict
 from analysis.plot_from_json import plot_from_dict
+from analysis.curvature import curvature
 
 # list of other functions to use
-FUNCTIONS = [E_alpha, magnitude_simple, ph_dim]
+FUNCTIONS = [magnitude, E_alpha, magnitude_integral]
+
+T_MAGNITUDE = np.sqrt(50000)
 
 
 def compute_all_quantities_one_seed(
         json_path: str,
         alpha: float = 1.,
-        t: float = 0.1,
+        t: float = T_MAGNITUDE,
         stems: List[str] = [
             "",
             "_01",
-            "_euclidean"
+            "_softmax"
         ],
         min_points: int = 200,
         max_points: int = None,
         jump: int = 200,
+        t_min: float = 0.1,
+        t_max: float = 2000,
+        n_points_curvature: int = 20,
         save_plots: bool=True,
         generalization_key: str = "worst_gen",
-        n: int=5000
+        n: int=50000,
+        pseudo_matrix_data_proportion: float = 0.1,
+        pseudo_distance_type: str = "euclidean",
+        theoretical_t: bool = True
     ):
     # WARNING: n should be (number of data points) * (pseudo_matrix_data_proportion)
     logger.warning(f"The specified value of n is {n}")
@@ -57,6 +68,13 @@ def compute_all_quantities_one_seed(
     # n = results[seed][]
 
     complexity_names = []
+
+    new_json_path = json_path.parent / "all_results_augmented.json"
+    if new_json_path.exists():
+        with open(str(new_json_path), "r") as new_json_file:
+            new_results = json.load(new_json_file)
+    else:
+        new_results = results.copy()
 
     # Computation of all the quantities
     # We loop through the experiments and compute everything
@@ -82,10 +100,14 @@ def compute_all_quantities_one_seed(
 
             # HACK: renormalization of the matrix
             if stem in ["", "_01"]:
-                dist_matrix = dist_matrix / n
-            if stem in ["pseudo_l2"]:
-                dist_matrix = dist_matrix / np.sqrt(n)
+                assert pseudo_distance_type in ["euclidean", "manhattan"], pseudo_distance_type
+                if pseudo_distance_type == "euclidean":
+                    dist_matrix = dist_matrix / np.sqrt(pseudo_matrix_data_proportion * n)
+                else:
+                    dist_matrix = dist_matrix / (pseudo_matrix_data_proportion * n)
 
+            if theoretical_t:
+                t = np.sqrt(n)
             
             # We loop over the functions defined in functions
             for f in FUNCTIONS:
@@ -100,34 +122,43 @@ def compute_all_quantities_one_seed(
                     t=t,
                     jump=jump
                 )
-                results[seed][key].update({
+                new_results[seed][key].update({
                     "alpha": alpha,
                     "min_points": min_points,
                     "max_points": max_points,
                     "jump": jump,
                     "t": t
                 })
-                results[seed][key][complexity_name] = float(complexity)
+                new_results[seed][key][complexity_name] = float(complexity)
     
     complexity_names = list(dict.fromkeys(complexity_names))
     logger.debug(f"Computed complexities: {complexity_names}")
 
     # Kendall coefficients 
     granulated_kendalls = granulated_kendall_from_dict(
-        results[seed],
+        new_results[seed],
         generalization_key = generalization_key,
         complexity_keys = complexity_names
     )
     kendall_path = json_path.parent / "granulated_kendalls.json"
     with open(str(kendall_path), "w") as json_file:
         json.dump(granulated_kendalls, json_file, indent=2)
+
+    # Pearson coefficients 
+    granulated_pearsons = granulated_pearson_from_dict(
+        new_results[seed],
+        generalization_key = generalization_key,
+        complexity_keys = complexity_names
+    )
+    pearson_path = json_path.parent / "granulated_pearsons.json"
+    with open(str(pearson_path), "w") as json_file:
+        json.dump(granulated_pearsons, json_file, indent=2)
     
     # Saving the new results file
     # in a new one to avoid overwriting
-    new_json_path = json_path.parent / "all_results_augmented.json"
     try:
         with open(str(new_json_path), "w") as json_file:
-            json.dump(results, json_file, indent=2)
+            json.dump(new_results, json_file, indent=2)
     except:
         logger.warning(f"Unable to save computed quantities in {str(new_json_path)}")
 
@@ -141,7 +172,7 @@ def compute_all_quantities_one_seed(
             output_path = (output_dir / f.__name__).with_suffix(".png")
 
             plot_from_dict(
-                results[seed],
+                new_results[seed],
                 output_path=output_path,
                 generalization_key=generalization_key,
                 complexity_key=complexity_name,

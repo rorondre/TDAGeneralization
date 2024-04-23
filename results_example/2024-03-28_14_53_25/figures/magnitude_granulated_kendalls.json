@@ -2,12 +2,12 @@
   "granulated Kendalls": {
     "magnitude": {
       "batch_size": NaN,
-      "learning_rate": 1.0,
+      "learning_rate": NaN,
       "average granulated Kendall coefficient": NaN
     }
   },
   "Kendall tau": {
-    "magnitude": 0.8944271909999159
+    "magnitude": NaN
   },
   "t": 0.1
 }

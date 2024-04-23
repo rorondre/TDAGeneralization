@@ -96,8 +96,10 @@ def plot_from_json(json_path: str,
     else:
         output_path = None
 
+    seed = list(results.keys())[0]
+    logger.warning(f"Only using seed {seed}")
     plot_from_dict(
-        results,
+        results[seed],
         str(output_path),
         generalization_key,
         complexity_key,

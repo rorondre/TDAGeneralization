@@ -69,7 +69,10 @@ def main(args_):
                         args_.freeze,
                         args_.compute_euclidean_dimension,
                         args_.worst_case_gen_freq,
-                        args_.JL_projection
+                        args_.JL_projection,
+                        args_.compute_softmax_dimension,
+                        args_.additional_identifier,
+                        args_.pseudo_metric_type
                         )
 
 
@@ -114,6 +117,9 @@ if __name__ == '__main__':
     parser.add_argument('--compute_euclidean_dimension', type=int, default=1)
     parser.add_argument('--worst_case_gen_freq', type=int, default=100) # frequency to compute test accuracy. If you dont want it, use 100000000000
     parser.add_argument('--JL_projection', type=float, default=0.05) 
+    parser.add_argument('--compute_softmax_dimension', type=int, default=1) # whether to compute the Euclidean distance matrices
+    parser.add_argument('--additional_identifier', type=str, default="")
+    parser.add_argument('--pseudo_metric_type', type=str, default="euclidean") # Optimizer
 
 
     # Unused arguments, needing to be implemented or removed
