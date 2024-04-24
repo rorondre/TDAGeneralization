@@ -20,7 +20,7 @@ from analysis.plot_from_json import plot_from_dict
 from analysis.curvature import curvature
 
 # list of other functions to use
-FUNCTIONS = [magnitude, E_alpha, magnitude_integral]
+FUNCTIONS = [magnitude_simple, E_alpha]
 
 T_MAGNITUDE = np.sqrt(50000)
 
@@ -32,7 +32,7 @@ def compute_all_quantities_one_seed(
         stems: List[str] = [
             "",
             "_01",
-            "_softmax"
+            "_euclidean"
         ],
         min_points: int = 200,
         max_points: int = None,
@@ -44,7 +44,7 @@ def compute_all_quantities_one_seed(
         generalization_key: str = "worst_gen",
         n: int=50000,
         pseudo_matrix_data_proportion: float = 0.1,
-        pseudo_distance_type: str = "euclidean",
+        pseudo_distance_type: str = "manhattan",
         theoretical_t: bool = True
     ):
     # WARNING: n should be (number of data points) * (pseudo_matrix_data_proportion)

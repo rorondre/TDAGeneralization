@@ -7,7 +7,7 @@
 #SBATCH --partition=cpu_devel       # Name of the partition
 #SBATCH --mem=10G                # Total memory allocated
 #SBATCH --hint=multithread       # we get physical cores not logical
-#SBATCH --time=01:00:00          # total run time limit (HH:MM:SS)
+#SBATCH --time=05:00:00          # total run time limit (HH:MM:SS)
 #SBATCH --output=%x.out.%j   # output file name
 #SBATCH --error=%x.err.%j    # error file name
 
