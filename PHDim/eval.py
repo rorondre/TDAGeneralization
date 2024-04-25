@@ -44,7 +44,7 @@ def eval_on_tensors(x, y, net, criterion, return_01: bool=False):
 
 
 @torch.no_grad()
-def eval(eval_loader, net, criterion, opt, eval: bool = False, pseudo_matrix_data_number: int = 5000):
+def eval(eval_loader, net, criterion, opt, eval: bool = False):
     """
     WARNING: criterion is not used anymore
     """
@@ -77,10 +77,6 @@ def eval(eval_loader, net, criterion, opt, eval: bool = False, pseudo_matrix_dat
 
         losses.append(losses_unreduced)
         outputs.append(out.flatten())
-
-
-        if total_size > pseudo_data_number:
-            break
 
     hist = [
         total_loss / total_size,

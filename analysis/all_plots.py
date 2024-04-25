@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from analysis.plot_ph_dim import ph_dim
 from analysis.plot_E_alpha import E_alpha
-from analysis.plot_magnitude_simple import magnitude as magnitude_simple
+from analysis.plot_magnitude_simple import magnitude
 from analysis.plot_magnitude_simple import magnitude_integral
 from analysis.kendall import granulated_kendall_from_dict
 from analysis.pearson import granulated_pearson_from_dict
@@ -20,7 +20,7 @@ from analysis.plot_from_json import plot_from_dict
 from analysis.curvature import curvature
 
 # list of other functions to use
-FUNCTIONS = [magnitude_simple, E_alpha]
+FUNCTIONS = [magnitude_integral]
 
 T_MAGNITUDE = np.sqrt(50000)
 
@@ -31,21 +31,20 @@ def compute_all_quantities_one_seed(
         t: float = T_MAGNITUDE,
         stems: List[str] = [
             "",
-            "_01",
-            "_euclidean"
         ],
         min_points: int = 200,
         max_points: int = None,
         jump: int = 200,
         t_min: float = 0.1,
-        t_max: float = 2000,
+        t_max: float = np.sqrt(50000),
         n_points_curvature: int = 20,
         save_plots: bool=True,
         generalization_key: str = "worst_gen",
         n: int=50000,
         pseudo_matrix_data_proportion: float = 0.1,
         pseudo_distance_type: str = "manhattan",
-        theoretical_t: bool = True
+        theoretical_t: bool = True,
+        functions: list = FUNCTIONS
     ):
     # WARNING: n should be (number of data points) * (pseudo_matrix_data_proportion)
     logger.warning(f"The specified value of n is {n}")
@@ -110,7 +109,7 @@ def compute_all_quantities_one_seed(
                 t = np.sqrt(n)
             
             # We loop over the functions defined in functions
-            for f in FUNCTIONS:
+            for f in functions:
                 complexity_name = f.__name__ + "_dist_matrix" + stem
                 complexity_names.append(f.__name__ + "_dist_matrix" + stem)
                 # kwargs should be allowed in all functions, otherwise there will be errors
@@ -140,7 +139,14 @@ def compute_all_quantities_one_seed(
         generalization_key = generalization_key,
         complexity_keys = complexity_names
     )
+
+    # We check if old granulated kendalls already exist
     kendall_path = json_path.parent / "granulated_kendalls.json"
+    if kendall_path.exists():
+        with open(str(kendall_path), "r") as old_kendall_file:
+            old_kendalls = json.load(old_kendall_file)
+        granulated_kendalls["granulated Kendalls"].update(old_kendalls["granulated Kendalls"])
+        granulated_kendalls["Kendall tau"].update(old_kendalls["Kendall tau"])
     with open(str(kendall_path), "w") as json_file:
         json.dump(granulated_kendalls, json_file, indent=2)
 
@@ -150,7 +156,14 @@ def compute_all_quantities_one_seed(
         generalization_key = generalization_key,
         complexity_keys = complexity_names
     )
+
+    # We check if old granulated kendalls already exist
     pearson_path = json_path.parent / "granulated_pearsons.json"
+    if pearson_path.exists():
+        with open(str(pearson_path), "r") as old_pearson_file:
+            old_pearsons = json.load(old_pearson_file)
+        granulated_pearsons["granulated pearsons"].update(old_pearsons["granulated pearsons"])
+        granulated_pearsons["pearson tau"].update(old_pearsons["pearson tau"])
     with open(str(pearson_path), "w") as json_file:
         json.dump(granulated_pearsons, json_file, indent=2)
     
@@ -164,7 +177,7 @@ def compute_all_quantities_one_seed(
 
     # Plots
     for stem in stems:
-        for f in FUNCTIONS:
+        for f in functions:
 
             complexity_name = f.__name__ + "_dist_matrix" + stem
             output_dir = json_path.parent / ("figures" + stem)

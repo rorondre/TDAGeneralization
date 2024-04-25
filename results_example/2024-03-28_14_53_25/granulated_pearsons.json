@@ -1,0 +1,24 @@
+{
+  "granulated pearsons": {
+    "E_alpha_dist_matrix": {
+      "batch_size": NaN,
+      "learning_rate": 1.0,
+      "average granulated pearson coefficient": NaN
+    },
+    "magnitude_dist_matrix": {
+      "batch_size": NaN,
+      "learning_rate": 1.0,
+      "average granulated pearson coefficient": NaN
+    },
+    "magnitude_integral_dist_matrix": {
+      "batch_size": NaN,
+      "learning_rate": 1.0,
+      "average granulated pearson coefficient": NaN
+    }
+  },
+  "pearson tau": {
+    "E_alpha_dist_matrix": 0.8861972054775186,
+    "magnitude_dist_matrix": 0.8908848590608422,
+    "magnitude_integral_dist_matrix": 0.9466183373972301
+  }
+}

@@ -236,12 +236,12 @@ if __name__ == '__main__':
     parser.add_argument('--data_proportion', type=float, default=1.) # subset of the data used for training (everything). Always use 1.
     parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.1) # proportion of data for the pseudo distance matrix
     parser.add_argument('--freeze', type=int, default=0) # Experimental, whether to freeze everything but the head. ONLY FOR VIT
-    parser.add_argument('--compute_euclidean_dimension', type=int, default=1) # whether to compute the Euclidean distance matrices
+    parser.add_argument('--compute_euclidean_dimension', type=int, default=0) # whether to compute the Euclidean distance matrices
     parser.add_argument('--proportion_eval', type=int, default=50000) # not used anymore
     parser.add_argument('--worst_case_gen_freq', type=int, default=100) # frequency to compute test accuracy. If you dont want it, use 100000000000
     parser.add_argument('--JL_projection', type=float, default=0.05) # frequency to compute test accuracy. If you dont want it, use 100000000000
     parser.add_argument('--compute_softmax_dimension', type=int, default=1) # whether to compute the Euclidean distance matrices
-    parser.add_argument('--pseudo_metric_type', type=str, default="euclidean") # Is the pseudometric based on l1 (manhattan) or l2 (euclidean) distance
+    parser.add_argument('--pseudo_metric_type', type=str, default="manhattan") # Is the pseudometric based on l1 (manhattan) or l2 (euclidean) distance
     
     
     # The following is a slightly hacky argument to perform the batch proportion experiment

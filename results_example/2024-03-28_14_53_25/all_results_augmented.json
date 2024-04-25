@@ -21,9 +21,10 @@
       "min_points": 200,
       "max_points": null,
       "jump": 200,
-      "t": 0.1,
+      "t": 223.60679774997897,
       "E_alpha_dist_matrix": 4.472732939575508e-08,
-      "magnitude_dist_matrix": 1.0
+      "magnitude_dist_matrix": 1.0,
+      "magnitude_integral_dist_matrix": 0.0
     },
     "1": {
       "train_acc": 3.125,
@@ -46,9 +47,10 @@
       "min_points": 200,
       "max_points": null,
       "jump": 200,
-      "t": 0.1,
+      "t": 223.60679774997897,
       "E_alpha_dist_matrix": 9.517669496972303e-08,
-      "magnitude_dist_matrix": 1.0
+      "magnitude_dist_matrix": 1.0,
+      "magnitude_integral_dist_matrix": 0.0
     },
     "2": {
       "train_acc": 9.375,
@@ -71,9 +73,10 @@
       "min_points": 200,
       "max_points": null,
       "jump": 200,
-      "t": 0.1,
+      "t": 223.60679774997897,
       "E_alpha_dist_matrix": 2.062940666291979e-06,
-      "magnitude_dist_matrix": 1.0
+      "magnitude_dist_matrix": 1.0002303433332003,
+      "magnitude_integral_dist_matrix": 0.02351055542598853
     },
     "3": {
       "train_acc": 9.375,
@@ -96,9 +99,10 @@
       "min_points": 200,
       "max_points": null,
       "jump": 200,
-      "t": 0.1,
+      "t": 223.60679774997897,
       "E_alpha_dist_matrix": 4.3998243199894205e-06,
-      "magnitude_dist_matrix": 1.0
+      "magnitude_dist_matrix": 1.0004900734371938,
+      "magnitude_integral_dist_matrix": 0.0384240724665809
     }
   },
   "85082": {
