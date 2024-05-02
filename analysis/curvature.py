@@ -1,4 +1,5 @@
 import json
+import time
 from pathlib import Path
 
 import fire
@@ -13,6 +14,9 @@ from analysis.plot_ph_dim import ph_dim
 from analysis.plot_magnitude_simple import magnitude
 
 
+T_MAX = np.sqrt(50000)
+ARRAY_DIR = "temp"
+
 def curvature(dist_matrix: np.ndarray,
            min_points=200,
            max_points=2000,
@@ -20,10 +24,11 @@ def curvature(dist_matrix: np.ndarray,
            h_dim=0,
            seed: int = 42,
            alpha: float = 1.,
-           t_min: float = 0.1,
-           t_max: float = 2000.,
+           t_min: float = 1.,
+           t_max: float = T_MAX,
            n_points_curvature: int = 20,
            save_path: str = None,
+           save_array: str = True,
            **kwargs) -> float:
 
     # We first compute the PH dimension
@@ -53,6 +58,13 @@ def curvature(dist_matrix: np.ndarray,
     ]).T
 
     magnitudes = np.array(magnitudes)
+    if save_array:
+        save_array_path = Path(ARRAY_DIR) / f"magnitude_curve_{int(100 * time.time())}.npy"
+        saved_array = np.stack([ts, magnitudes])
+        if not save_array_path.parent.is_dir():
+            save_array_path.parent.mkdir(parents=True, exist_ok=True)
+        np.save(str(save_array_path), saved_array)
+        logger.info(f"Saved magnitude curve in {str(save_array_path)}")
 
     linear_estimator = np.linalg.inv(data_matrix.T @ data_matrix) @ (data_matrix.T @ magnitudes)
 

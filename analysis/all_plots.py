@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from analysis.plot_ph_dim import ph_dim
 from analysis.plot_E_alpha import E_alpha
-from analysis.plot_magnitude_simple import magnitude
+from analysis.plot_magnitude_simple import magnitude, positive_magnitude
 from analysis.plot_magnitude_simple import magnitude_integral
 from analysis.kendall import granulated_kendall_from_dict
 from analysis.pearson import granulated_pearson_from_dict
@@ -20,7 +20,7 @@ from analysis.plot_from_json import plot_from_dict
 from analysis.curvature import curvature
 
 # list of other functions to use
-FUNCTIONS = [magnitude_integral]
+FUNCTIONS = [curvature]
 
 T_MAGNITUDE = np.sqrt(50000)
 
@@ -30,12 +30,12 @@ def compute_all_quantities_one_seed(
         alpha: float = 1.,
         t: float = T_MAGNITUDE,
         stems: List[str] = [
-            "",
+            ""
         ],
         min_points: int = 200,
         max_points: int = None,
         jump: int = 200,
-        t_min: float = 0.1,
+        t_min: float = 1.,
         t_max: float = np.sqrt(50000),
         n_points_curvature: int = 20,
         save_plots: bool=True,

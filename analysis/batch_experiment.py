@@ -24,7 +24,7 @@ def main(
     n: int = 50000,
     first_seed: bool = True,
     alpha: float = 1.,
-    distance_type: int = 2,
+    distance_type: int = 1,
     stem: str = ""
 ):
 

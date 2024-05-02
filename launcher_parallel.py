@@ -204,12 +204,12 @@ if __name__ == '__main__':
     parser.add_argument('--num_gpus', type=int, default=1)
 
     # Variation of learning rate and batch size --> GRID
-    parser.add_argument('--lr_min', type=float, default=1.e-4)
+    parser.add_argument('--lr_min', type=float, default=1.e-5)
     parser.add_argument('--lr_max', type=float, default=1.e-3)
-    parser.add_argument('--bs_min', type=int, default=64)
+    parser.add_argument('--bs_min', type=int, default=8)
     parser.add_argument('--bs_max', type=int, default=512)
-    parser.add_argument('--n_lr', type=int, default=1)
-    parser.add_argument('--n_bs', type=int, default=1)
+    parser.add_argument('--n_lr', type=int, default=6)
+    parser.add_argument('--n_bs', type=int, default=6)
 
     # Parameters which are launcher specific
     parser.add_argument('--seed', type=int, default=SEED)
@@ -236,7 +236,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_proportion', type=float, default=1.) # subset of the data used for training (everything). Always use 1.
     parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.1) # proportion of data for the pseudo distance matrix
     parser.add_argument('--freeze', type=int, default=0) # Experimental, whether to freeze everything but the head. ONLY FOR VIT
-    parser.add_argument('--compute_euclidean_dimension', type=int, default=0) # whether to compute the Euclidean distance matrices
+    parser.add_argument('--compute_euclidean_dimension', type=int, default=1) # whether to compute the Euclidean distance matrices
     parser.add_argument('--proportion_eval', type=int, default=50000) # not used anymore
     parser.add_argument('--worst_case_gen_freq', type=int, default=100) # frequency to compute test accuracy. If you dont want it, use 100000000000
     parser.add_argument('--JL_projection', type=float, default=0.05) # frequency to compute test accuracy. If you dont want it, use 100000000000

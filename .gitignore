@@ -26,6 +26,7 @@ weights/
 
 final_results
 final_results/*
+final_results/
 
 # Profiling files
 *.prof
@@ -36,3 +37,9 @@ profiling_test
 
 batch_experiment
 batch_experiment/
+
+temp
+temp/
+
+figures
+figures/*

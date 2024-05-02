@@ -18,7 +18,7 @@ from loguru import logger
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULT_DIR = "./final_results"
 
-LONG = 23
+LONG = 35
 SHORT = 7
 
 
