@@ -59,7 +59,7 @@ def curvature(dist_matrix: np.ndarray,
 
     magnitudes = np.array(magnitudes)
     if save_array:
-        save_array_path = Path(ARRAY_DIR) / f"magnitude_curve_{int(100 * time.time())}.npy"
+        save_array_path = Path(ARRAY_DIR) / f"magnitude_curve_01_{int(100 * time.time())}.npy"
         saved_array = np.stack([ts, magnitudes])
         if not save_array_path.parent.is_dir():
             save_array_path.parent.mkdir(parents=True, exist_ok=True)

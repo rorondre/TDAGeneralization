@@ -30,7 +30,7 @@ def compute_all_quantities_one_seed(
         alpha: float = 1.,
         t: float = T_MAGNITUDE,
         stems: List[str] = [
-            ""
+            "_01"
         ],
         min_points: int = 200,
         max_points: int = None,

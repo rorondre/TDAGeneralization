@@ -43,3 +43,6 @@ temp/
 
 figures
 figures/*
+
+*.ipynb
+.ipynb_checkpoints/
