@@ -46,3 +46,7 @@ figures/*
 
 *.ipynb
 .ipynb_checkpoints/
+
+phenv/
+
+cython_constraint.txt

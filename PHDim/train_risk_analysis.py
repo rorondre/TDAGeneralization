@@ -352,8 +352,10 @@ def main(
     evaluation_history_TEST = []
     evaluation_history_TRAIN = []
 
-    # HACK
+    # HACK to avoid min and max of empty lists
     worst_case_acc = [100000]
+    worst_accuracy_gap = [-100000]
+    worst_probability_gap = [-10000]
 
     # initialize results of the experiment, returned if didn't work
     exp_dict = {}
@@ -447,7 +449,8 @@ def main(
                     assert out.shape == (pseudo_matrix_data_number, n_classes), \
                                                 (out.shape, (pseudo_matrix_data_number, n_classes))
                     if compute_activation_dimension:
-                        softmax_history.append(torch.softmax(out, dim=1).flatten())
+                        # softmax history is now just the highest probability
+                        softmax_history.append(torch.max(torch.softmax(out, dim=1), dim=1)[0])
                     
                     assert losses.ndim == 1, losses.shape
                     assert len(losses) == pseudo_matrix_data_number, (losses.shape, pseudo_matrix_data_number)
@@ -469,7 +472,12 @@ def main(
                     # te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
                     if worst_case_gen_freq is not None and i % worst_case_gen_freq == 0:
                         # te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
-                        te_hist, *_ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
+                        te_hist, losses, out, losses_01 = eval_on_tensors(test_x, test_y, net, crit_unreduced)
+
+                        # important change here, this is the actual generalization error, not 
+                        worst_accuracy_gap.append(tr_hist[1] - te_hist[1].item())
+                        softmax_test = torch.max(torch.softmax(out, dim=1), dim=1).item()
+                        worst_probability_gap.append(softmax_history[-1].item() - softmax_test)
                         worst_case_acc.append(te_hist[1].item())
                         logger.info(f"Test accuracy at iteration {i}: {te_hist[1]}")
                     
@@ -526,11 +534,13 @@ def main(
             train_acc = evaluation_history_TRAIN[-1][2]
 
             if worst_case_gen_freq is not None:
-                logger.debug(f"wors_acc: {worst_case_acc}")
-                print(worst_case_acc)
                 worst_gen = min(worst_case_acc)
+                worst_accuracy_gap = max(worst_accuracy_gap)
+                worst_probability_gap = max(worst_probability_gap)
             else:
                 worst_gen = "non_computed"
+                worst_probability_gap = "non_computed"
+                worst_accuracy_gap = "non_computed"
 
             exp_dict = {
                 "train_acc": train_acc,
@@ -548,7 +558,9 @@ def main(
                 "dataset": dataset,
                 "worst_acc": worst_gen,
                 "n": data_number,
-                "pseudo_matrix_data_proportion": pseudo_matrix_data_proportion
+                "pseudo_matrix_data_proportion": pseudo_matrix_data_proportion,
+                "worst_probability_gap": worst_probability_gap,
+                "worst_acuracy_gap": worst_accuracy_gap
             }
 
             save_distance_matrix_file_01 = (Path(save_distance_matrix_file).parent / \
