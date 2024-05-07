@@ -345,6 +345,8 @@ def main(
     test_x = test_x.to(device)
     test_y = test_y.to(device)
 
+    logger.debug(f"Shape eval X: {eval_x.shape}, Shape eval Y: {eval_y.shape}")
+
     # training logs per iteration
     training_history = []
 
@@ -365,6 +367,7 @@ def main(
     loss_history = deque([])
     loss_01_history = deque([])
     softmax_history = deque([])
+    probability_history = deque([])
 
     STOP = False  # Do we have enough point for persistent homology
     CONVERGED = False  # has the experiment converged?
@@ -449,8 +452,15 @@ def main(
                     assert out.shape == (pseudo_matrix_data_number, n_classes), \
                                                 (out.shape, (pseudo_matrix_data_number, n_classes))
                     if compute_activation_dimension:
-                        # softmax history is now just the highest probability
-                        softmax_history.append(torch.max(torch.softmax(out, dim=1), dim=1)[0])
+                        # softmax history 
+                        # softmax_history.append(torch.max(torch.softmax(out, dim=1), dim=1)[0])
+                        # Class probability history 
+                        assert eval_y.ndim == 1, eval_y.shape
+                        probability_history.append(torch.softmax(out, dim=1)[
+                            torch.arange(out.shape[0]),
+                            eval_y[:pseudo_matrix_data_number]
+                        ])
+
                     
                     assert losses.ndim == 1, losses.shape
                     assert len(losses) == pseudo_matrix_data_number, (losses.shape, pseudo_matrix_data_number)
@@ -472,12 +482,18 @@ def main(
                     # te_hist, _, _ = eval_on_tensors(test_x, test_y, net, crit_unreduced)
                     if worst_case_gen_freq is not None and i % worst_case_gen_freq == 0:
                         # te_hist, _, _ = eval(test_loader_eval, net, crit_unreduced, opt)
-                        te_hist, losses, out, losses_01 = eval_on_tensors(test_x, test_y, net, crit_unreduced)
+                        te_hist, losses, out = eval_on_tensors(test_x, test_y, net, crit_unreduced)
 
-                        # important change here, this is the actual generalization error, not 
-                        worst_accuracy_gap.append(tr_hist[1] - te_hist[1].item())
-                        softmax_test = torch.max(torch.softmax(out, dim=1), dim=1).item()
-                        worst_probability_gap.append(softmax_history[-1].item() - softmax_test)
+                        # important change here, this is the actual generalization error, not just the test accuracy
+                        worst_accuracy_gap.append(tr_hist[1].item() - te_hist[1].item())
+
+                        softmax_test = torch.softmax(out, dim=1)
+                        assert softmax_test.ndim == 2, softmax_test.shape
+                        assert softmax_test.shape[0] == out.shape[0], (softmax_test.shape, out.shape[0])
+                        assert softmax_test.shape[1] == n_classes, (softmax_test.shape, n_classes)
+                        probability_test = softmax_test[torch.arange(out.shape[0]), test_y]
+
+                        worst_probability_gap.append(probability_history[-1].mean().item() - probability_test.mean().item())
                         worst_case_acc.append(te_hist[1].item())
                         logger.info(f"Test accuracy at iteration {i}: {te_hist[1]}")
                     
@@ -527,8 +543,10 @@ def main(
             pseudo_distance_matrix_01 = pairwise_distances(loss_01_history_np, metric=metric_pseudo)
 
             if compute_activation_dimension:
-                softmax_history_np = torch.stack(tuple(softmax_history)).cpu().numpy()
-                distance_matrix_softmax = pairwise_distances(softmax_history_np, metric=metric)
+                probability_history_np = torch.stack(tuple(probability_history)).cpu().numpy()
+                distance_matrix_probability = pairwise_distances(probability_history_np, metric=metric)
+                # softmax_history_np = torch.stack(tuple(softmax_history)).cpu().numpy()
+                # distance_matrix_softmax = pairwise_distances(softmax_history_np, metric=metric)
 
             test_acc = evaluation_history_TEST[-1][2]
             train_acc = evaluation_history_TRAIN[-1][2]
@@ -536,7 +554,7 @@ def main(
             if worst_case_gen_freq is not None:
                 worst_gen = min(worst_case_acc)
                 worst_accuracy_gap = max(worst_accuracy_gap)
-                worst_probability_gap = max(worst_probability_gap)
+                worst_probability_gap = 100. * max(worst_probability_gap)
             else:
                 worst_gen = "non_computed"
                 worst_probability_gap = "non_computed"
@@ -560,7 +578,7 @@ def main(
                 "n": data_number,
                 "pseudo_matrix_data_proportion": pseudo_matrix_data_proportion,
                 "worst_probability_gap": worst_probability_gap,
-                "worst_acuracy_gap": worst_accuracy_gap
+                "worst_accuracy_gap": worst_accuracy_gap
             }
 
             save_distance_matrix_file_01 = (Path(save_distance_matrix_file).parent / \
@@ -586,14 +604,23 @@ def main(
                     logger.info("Not computing Euclidean distance matrix, as specified by arguments")
 
                 if compute_activation_dimension:
-                    softmax_dm_file = (Path(save_distance_matrix_file).parent / \
-                                        (Path(save_distance_matrix_file).stem + "_softmax")).with_suffix(".npy")
-                    logger.info(f"Saving softmax distance matrix in {str(save_distance_matrix_file)} ✅")
-                    np.save(str(softmax_dm_file), distance_matrix_softmax)
-                    exp_dict["saved_distance_matrix_softmax"] = str(softmax_dm_file)
+                    # probability distance matrix
+                    probability_dm_file = (Path(save_distance_matrix_file).parent / \
+                                        (Path(save_distance_matrix_file).stem + "_probability")).with_suffix(".npy")
+                    logger.info(f"Saving probability distance matrix in {str(save_distance_matrix_file)} ✅")
+                    np.save(str(probability_dm_file), distance_matrix_probability)
+                    exp_dict["saved_distance_matrix_probability"] = str(probability_dm_file)
+
+                    # Softmax ditance matrix
+                    # softmax_dm_file = (Path(save_distance_matrix_file).parent / \
+                    #                     (Path(save_distance_matrix_file).stem + "_softmax")).with_suffix(".npy")
+                    # logger.info(f"Saving softmax distance matrix in {str(save_distance_matrix_file)} ✅")
+                    # np.save(str(softmax_dm_file), distance_matrix_softmax)
+                    # exp_dict["saved_distance_matrix_softmax"] = str(softmax_dm_file)
                 else:
                     exp_dict["saved_distance_matrix_softmax"] = "non_computed"
-                    logger.info("Not computing softmax distance matrix, as specified by arguments")
+                    exp_dict["saved_distance_matrix_probability"] = "non_computed"
+                    logger.info("Not computing softmax / probability distance matrix, as specified by arguments")
 
             else:
                 logger.warning("No distance matrix has been saved")

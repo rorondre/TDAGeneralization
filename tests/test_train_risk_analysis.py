@@ -77,7 +77,8 @@ def test_train_risk_analysis():
                                   jump=5,
                                   resize=8,
                                   initial_weights=None,
-                                  JL_projection=0.05)
+                                  JL_projection=0.05,
+                                  worst_case_gen_freq=1)
 
         exp_folder = options()
 

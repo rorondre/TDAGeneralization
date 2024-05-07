@@ -136,7 +136,8 @@ class AnalysisOptions(BaseModel):
                     jump=self.jump,
                     additional_dimensions=self.additional_dimensions,
                     data_proportion=self.data_proportion,
-                    JL_projection=self.JL_projection
+                    JL_projection=self.JL_projection,
+                    worst_case_gen_freq=self.worst_case_gen_freq
                 )
 
                 experiment_results[exp_num] = exp_dict

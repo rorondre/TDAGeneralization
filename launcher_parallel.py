@@ -204,7 +204,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_gpus', type=int, default=1)
 
     # Variation of learning rate and batch size --> GRID
-    parser.add_argument('--lr_min', type=float, default=1.e-5)
+    parser.add_argument('--lr_min', type=float, default=1.e-6)
     parser.add_argument('--lr_max', type=float, default=1.e-3)
     parser.add_argument('--bs_min', type=int, default=8)
     parser.add_argument('--bs_max', type=int, default=512)
@@ -238,12 +238,11 @@ if __name__ == '__main__':
     parser.add_argument('--freeze', type=int, default=0) # Experimental, whether to freeze everything but the head. ONLY FOR VIT
     parser.add_argument('--compute_euclidean_dimension', type=int, default=1) # whether to compute the Euclidean distance matrices
     parser.add_argument('--proportion_eval', type=int, default=50000) # not used anymore
-    parser.add_argument('--worst_case_gen_freq', type=int, default=100) # frequency to compute test accuracy. If you dont want it, use 100000000000
+    parser.add_argument('--worst_case_gen_freq', type=int, default=10) # frequency to compute test accuracy. If you dont want it, use 100000000000
     parser.add_argument('--JL_projection', type=float, default=0.05) # frequency to compute test accuracy. If you dont want it, use 100000000000
     parser.add_argument('--compute_softmax_dimension', type=int, default=1) # whether to compute the Euclidean distance matrices
     parser.add_argument('--pseudo_metric_type', type=str, default="manhattan") # Is the pseudometric based on l1 (manhattan) or l2 (euclidean) distance
-    
-    
+      
     # The following is a slightly hacky argument to perform the batch proportion experiment
     # in the computation of the pseudo distance matrix
     # This argument is launcher-specific

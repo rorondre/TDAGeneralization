@@ -20,7 +20,7 @@ from analysis.plot_from_json import plot_from_dict
 from analysis.curvature import curvature
 
 # list of other functions to use
-FUNCTIONS = [curvature]
+FUNCTIONS = [positive_magnitude, E_alpha]
 
 T_MAGNITUDE = np.sqrt(50000)
 
@@ -30,26 +30,28 @@ def compute_all_quantities_one_seed(
         alpha: float = 1.,
         t: float = T_MAGNITUDE,
         stems: List[str] = [
+            "",
             "_01"
         ],
         min_points: int = 200,
         max_points: int = None,
         jump: int = 200,
         t_min: float = 1.,
-        t_max: float = np.sqrt(50000),
+        t_max: float = T_MAGNITUDE,
         n_points_curvature: int = 20,
         save_plots: bool=True,
-        generalization_key: str = "worst_gen",
+        generalization_key: str = "worst_acuracy_gap",
         n: int=50000,
         pseudo_matrix_data_proportion: float = 0.1,
         pseudo_distance_type: str = "manhattan",
         theoretical_t: bool = True,
-        functions: list = FUNCTIONS
+        functions: list = FUNCTIONS,
+        use_augmented: bool=False
     ):
     # WARNING: n should be (number of data points) * (pseudo_matrix_data_proportion)
     logger.warning(f"The specified value of n is {n}")
-
-    logger.debug(f"Used stems: {stems}")
+    if use_augmented:
+        logger.warning("use_augmented is 1, already computed complexities won't be overwritten")
 
     json_path = Path(json_path)
     assert json_path.exists(), str(json_path)
@@ -75,6 +77,13 @@ def compute_all_quantities_one_seed(
     else:
         new_results = results.copy()
 
+    if use_augmented:
+        if not new_json_path.exists():
+            raise FileNotFoundError("Augmented file does not exist yet, set use_augmented to False")
+        augmented_experiment = new_results[
+                list(new_results.keys())[0]
+            ]["0"]
+
     # Computation of all the quantities
     # We loop through the experiments and compute everything
     for key in tqdm(results[seed].keys()):
@@ -83,8 +92,12 @@ def compute_all_quantities_one_seed(
         if generalization_key == "worst_gen":
             results[seed][key]["worst_gen"] = results[seed][key]['train_acc'] -\
                                              results[seed][key]['worst_acc']
+            new_results[seed][key]["worst_gen"] = results[seed][key]['train_acc'] -\
+                                             results[seed][key]['worst_acc']
         if generalization_key == "worst_gen_loss":
             results[seed][key]["worst_gen_loss"] = results[seed][key]['train_loss'] -\
+                                             results[seed][key]['worst_loss']
+            new_results[seed][key]["worst_gen_loss"] = results[seed][key]['train_loss'] -\
                                              results[seed][key]['worst_loss']
 
         # Now we loop over the potential distance matrices
@@ -113,22 +126,25 @@ def compute_all_quantities_one_seed(
                 complexity_name = f.__name__ + "_dist_matrix" + stem
                 complexity_names.append(f.__name__ + "_dist_matrix" + stem)
                 # kwargs should be allowed in all functions, otherwise there will be errors
-                complexity = f(
-                    dist_matrix,
-                    alpha=alpha,
-                    min_points=min_points,
-                    max_points=max_points,
-                    t=t,
-                    jump=jump
-                )
-                new_results[seed][key].update({
-                    "alpha": alpha,
-                    "min_points": min_points,
-                    "max_points": max_points,
-                    "jump": jump,
-                    "t": t
-                })
-                new_results[seed][key][complexity_name] = float(complexity)
+
+                if not(use_augmented and complexity_name in augmented_experiment):
+
+                    complexity = f(
+                        dist_matrix,
+                        alpha=alpha,
+                        min_points=min_points,
+                        max_points=max_points,
+                        t=t,
+                        jump=jump
+                    )
+                    new_results[seed][key].update({
+                        "alpha": alpha,
+                        "min_points": min_points,
+                        "max_points": max_points,
+                        "jump": jump,
+                        "t": t
+                    })
+                    new_results[seed][key][complexity_name] = float(complexity)
     
     complexity_names = list(dict.fromkeys(complexity_names))
     logger.debug(f"Computed complexities: {complexity_names}")
@@ -145,8 +161,10 @@ def compute_all_quantities_one_seed(
     if kendall_path.exists():
         with open(str(kendall_path), "r") as old_kendall_file:
             old_kendalls = json.load(old_kendall_file)
-        granulated_kendalls["granulated Kendalls"].update(old_kendalls["granulated Kendalls"])
-        granulated_kendalls["Kendall tau"].update(old_kendalls["Kendall tau"])
+        old_kendalls["granulated Kendalls"].update(granulated_kendalls["granulated Kendalls"])
+        old_kendalls["Kendall tau"].update(granulated_kendalls["Kendall tau"])
+        old_kendalls["generalization_key"] = generalization_key
+        granulated_kendalls = old_kendalls.copy()
     with open(str(kendall_path), "w") as json_file:
         json.dump(granulated_kendalls, json_file, indent=2)
 
@@ -157,13 +175,15 @@ def compute_all_quantities_one_seed(
         complexity_keys = complexity_names
     )
 
-    # We check if old granulated kendalls already exist
+    # We check if old granulated pearsons already exist
     pearson_path = json_path.parent / "granulated_pearsons.json"
     if pearson_path.exists():
         with open(str(pearson_path), "r") as old_pearson_file:
             old_pearsons = json.load(old_pearson_file)
-        granulated_pearsons["granulated pearsons"].update(old_pearsons["granulated pearsons"])
-        granulated_pearsons["pearson tau"].update(old_pearsons["pearson tau"])
+        old_pearsons["granulated pearsons"].update(granulated_pearsons["granulated pearsons"])
+        old_pearsons["pearson tau"].update(granulated_pearsons["pearson tau"])
+        old_pearsons["generalization_key"] = generalization_key
+        granulated_pearsons = old_pearsons.copy()
     with open(str(pearson_path), "w") as json_file:
         json.dump(granulated_pearsons, json_file, indent=2)
     

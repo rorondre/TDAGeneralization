@@ -18,7 +18,8 @@
   },
   "pearson tau": {
     "E_alpha_dist_matrix": 0.8861972054775186,
-    "magnitude_dist_matrix": 0.8908848590608422,
+    "magnitude_dist_matrix": 0.8908848604857853,
     "magnitude_integral_dist_matrix": 0.9466183373972301
-  }
+  },
+  "generalization_key": "acc_gap"
 }

@@ -1,3 +1,4 @@
+import datetime
 import json
 import time
 from pathlib import Path
@@ -15,7 +16,7 @@ from analysis.plot_magnitude_simple import magnitude
 
 
 T_MAX = np.sqrt(50000)
-ARRAY_DIR = "temp"
+ARRAY_DIR = str(Path("temp") / str(datetime.datetime.now()).replace(" ", "_").replace(":", "_").split(".")[0])
 
 def curvature(dist_matrix: np.ndarray,
            min_points=200,

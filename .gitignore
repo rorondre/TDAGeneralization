@@ -50,3 +50,5 @@ figures/*
 phenv/
 
 cython_constraint.txt
+
+*.gz
