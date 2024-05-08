@@ -30,8 +30,7 @@ def compute_all_quantities_one_seed(
         alpha: float = 1.,
         t: float = T_MAGNITUDE,
         stems: List[str] = [
-            "",
-            "_01"
+            "_probability"
         ],
         min_points: int = 200,
         max_points: int = None,
@@ -40,7 +39,7 @@ def compute_all_quantities_one_seed(
         t_max: float = T_MAGNITUDE,
         n_points_curvature: int = 20,
         save_plots: bool=True,
-        generalization_key: str = "worst_acuracy_gap",
+        generalization_key: str = "worst_probability_gap",
         n: int=50000,
         pseudo_matrix_data_proportion: float = 0.1,
         pseudo_distance_type: str = "manhattan",
@@ -82,7 +81,7 @@ def compute_all_quantities_one_seed(
             raise FileNotFoundError("Augmented file does not exist yet, set use_augmented to False")
         augmented_experiment = new_results[
                 list(new_results.keys())[0]
-            ]["0"]
+            ]["0"].copy()
 
     # Computation of all the quantities
     # We loop through the experiments and compute everything
@@ -129,6 +128,8 @@ def compute_all_quantities_one_seed(
 
                 if not(use_augmented and complexity_name in augmented_experiment):
 
+                    logger.debug(f"computing {complexity_name} for experiment {key}")
+
                     complexity = f(
                         dist_matrix,
                         alpha=alpha,
@@ -148,6 +149,9 @@ def compute_all_quantities_one_seed(
     
     complexity_names = list(dict.fromkeys(complexity_names))
     logger.debug(f"Computed complexities: {complexity_names}")
+
+    test_dict = new_results[seed]["0"]
+    logger.debug(f"new_results: {json.dumps(test_dict, indent=2)}")
 
     # Kendall coefficients 
     granulated_kendalls = granulated_kendall_from_dict(

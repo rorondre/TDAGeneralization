@@ -83,7 +83,7 @@ def main(args_):
 
     if args_.batch_experiment > 0:
         logger.warning("Performing the batch experiment, pseudo_matrix_data_proportion will be ignored")
-        pseudo_proportions = list(np.linspace(0.1, 1., args_.batch_experiment))
+        pseudo_proportions = [0.01] + list(np.linspace(0.1, 1., args_.batch_experiment))
     else:
         pseudo_proportions = [args_.pseudo_matrix_data_proportion]
     logger.info(f"Used pseudo proportions :{pseudo_proportions}")
@@ -204,12 +204,12 @@ if __name__ == '__main__':
     parser.add_argument('--num_gpus', type=int, default=1)
 
     # Variation of learning rate and batch size --> GRID
-    parser.add_argument('--lr_min', type=float, default=1.e-6)
+    parser.add_argument('--lr_min', type=float, default=1.e-4)
     parser.add_argument('--lr_max', type=float, default=1.e-3)
-    parser.add_argument('--bs_min', type=int, default=8)
+    parser.add_argument('--bs_min', type=int, default=64)
     parser.add_argument('--bs_max', type=int, default=512)
-    parser.add_argument('--n_lr', type=int, default=6)
-    parser.add_argument('--n_bs', type=int, default=6)
+    parser.add_argument('--n_lr', type=int, default=1)
+    parser.add_argument('--n_bs', type=int, default=1)
 
     # Parameters which are launcher specific
     parser.add_argument('--seed', type=int, default=SEED)
@@ -236,7 +236,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_proportion', type=float, default=1.) # subset of the data used for training (everything). Always use 1.
     parser.add_argument('--pseudo_matrix_data_proportion', type=float, default=0.1) # proportion of data for the pseudo distance matrix
     parser.add_argument('--freeze', type=int, default=0) # Experimental, whether to freeze everything but the head. ONLY FOR VIT
-    parser.add_argument('--compute_euclidean_dimension', type=int, default=1) # whether to compute the Euclidean distance matrices
+    parser.add_argument('--compute_euclidean_dimension', type=int, default=0) # whether to compute the Euclidean distance matrices
     parser.add_argument('--proportion_eval', type=int, default=50000) # not used anymore
     parser.add_argument('--worst_case_gen_freq', type=int, default=10) # frequency to compute test accuracy. If you dont want it, use 100000000000
     parser.add_argument('--JL_projection', type=float, default=0.05) # frequency to compute test accuracy. If you dont want it, use 100000000000
@@ -246,7 +246,7 @@ if __name__ == '__main__':
     # The following is a slightly hacky argument to perform the batch proportion experiment
     # in the computation of the pseudo distance matrix
     # This argument is launcher-specific
-    parser.add_argument('--batch_experiment', type=int, default=0) # whether to compute the Euclidean distance matrices
+    parser.add_argument('--batch_experiment', type=int, default=10) 
     
     # Unused arguments, needing to be implemented or removed
     parser.add_argument('--jump', type=int, default=1) # unused at the moment
