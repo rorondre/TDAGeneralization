@@ -25,7 +25,8 @@ def main(
     first_seed: bool = True,
     alpha: float = 1.,
     distance_type: int = 1,
-    stem: str = ""
+    stem: str = "",
+    use_results: bool = True
 ):
 
     result_dir = Path(result_dir)
@@ -70,17 +71,24 @@ def main(
         elif distance_type == 2:
             dist_matrix = dist_matrix / np.sqrt(int(pp * n))
 
-        # E_alpha
-        E_alpha_comp = E_alpha(dist_matrix, alpha=alpha)
+        # E-alpha
+        if "E_alpha" not in results_seed[key].keys() or not use_results:
+            E_alpha_comp = E_alpha(dist_matrix, alpha=alpha)
+        else:
+            E_alpha_comp = results_seed[key]["E_alpha"]
         E_alphas.append(E_alpha_comp)
 
         # magnitude
+        if "positive_magnitude" not in results_seed[key].keys() or not use_results:
+            magnitude_comp = magnitude(dist_matrix, alpha=alpha)
+        else:
+            magnitude_comp = results_seed[key]["positive_magnitude"]
         magnitude_comp = positive_magnitude(dist_matrix, t=np.sqrt(n))
         magnitudes.append(magnitude_comp)
 
         # Writing the new JSON file
-        results_seed[key]["E_alpha"] = float(E_alpha_comp)
-        results_seed[key]["positive_magnitude"] = float(magnitude_comp)
+        results[seed][key]["E_alpha"] = float(E_alpha_comp)
+        results[seed][key]["positive_magnitude"] = float(magnitude_comp)
 
 
     # Sorting everything
@@ -105,14 +113,14 @@ def main(
     plt.bar(
         100. * pseudo_proportions - 3.,
         100. * (E_alphas - E_reference) / E_reference,
-        color = "r",
+        color = "blue",
         label = r"$E_\alpha$",
         width = 3.
     )
     plt.bar(
         100. * pseudo_proportions,
         100. * (magnitudes - magnitude_reference) / magnitude_reference,
-        color = "k",
+        color = "orange",
         label = r"$\mathrm{PMag}(\sqrt{n}\mathcal{W})$",
         width = 3.
     )
@@ -120,6 +128,8 @@ def main(
     plt.legend()
     plt.ylabel("Relative variation (%)")
     plt.xlabel("Proportion of the data (%)")
+
+    plt.set_ylim(None, 30.)
 
     # Saving the figure
     output_path = results_path.parent / "figures" / f"batch_experiment{stem}.png"
@@ -131,7 +141,7 @@ def main(
     plt.close()
 
     # Saving the new JSON file
-    with open(str(results_path), "r") as new_json_file:
+    with open(str(results_path), "w") as new_json_file:
         json.dump(results, new_json_file, indent=2)
     logger.info(f"Saved the new JSON file in {str(results_path)}")
 
