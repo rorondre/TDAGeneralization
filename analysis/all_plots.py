@@ -20,9 +20,9 @@ from analysis.plot_from_json import plot_from_dict
 from analysis.curvature import curvature
 
 # list of other functions to use
-FUNCTIONS = [curvature]
+FUNCTIONS = [E_alpha, ph_dim, positive_magnitude]
 
-T_MAGNITUDE = 10. * np.sqrt(50000)
+T_MAGNITUDE = np.sqrt(50000)
 
 
 def compute_all_quantities_one_seed(
@@ -30,7 +30,9 @@ def compute_all_quantities_one_seed(
         alpha: float = 1.,
         t: float = T_MAGNITUDE,
         stems: List[str] = [
-            "_probability"
+            "",
+            "_euclidean",
+            "_01"
         ],
         min_points: int = 200,
         max_points: int = None,

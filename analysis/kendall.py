@@ -1,5 +1,6 @@
 import json
 import itertools
+import math
 from pathlib import Path
 from typing import List
 
@@ -8,8 +9,17 @@ import numpy as np
 from loguru import logger
 from scipy.stats import kendalltau
 
+# HACK to avoid nan values
+def kendalltau_modified(array1: np.ndarray, array2: np.ndarray) -> float:
 
+    tau = kendalltau(array1, array2).correlation
+    
+    # HACK to handle nan values which is close to the `a` variant of the Kendall tau coefficient
+    # which is unfortunately not implemented in scipy.stats
+    if math.isnan(tau):
+        tau = 0.
 
+    return tau
 
 
 def granulated_kendall_from_dict(results: dict,
@@ -31,7 +41,7 @@ def granulated_kendall_from_dict(results: dict,
     whole_kendall = {}
     for comp in complexity_keys:
         comp_tab = np.array([results[key][comp] for key in experiments])
-        whole_tau = kendalltau(gen_tab, comp_tab).correlation
+        whole_tau = kendalltau_modified(gen_tab, comp_tab)
         whole_kendall[comp] = whole_tau 
 
     granulated_kendalls = {}
@@ -64,8 +74,8 @@ def granulated_kendall_from_dict(results: dict,
                                   if all([results[key][hyp] == other_hyp_set[i]
                                           for i, hyp in enumerate(other_hyperparameters)])]
 
-                ktau = kendalltau(gen_tab, complexity_tab)
-                kendall += ktau.correlation / m
+                ktau = kendalltau_modified(gen_tab, complexity_tab)
+                kendall += ktau / m
                 # TODO: the kendalltau function computes p-values, they should be logged in as well
 
             granulated_kendalls[complexity][hyperparameter] = kendall
@@ -109,7 +119,8 @@ def granulated_kendall_from_json(json_path: str,
     whole_kendall = {}
     for comp in complexity_keys:
         comp_tab = np.array([results[key][comp] for key in experiments])
-        whole_tau = kendalltau(gen_tab, comp_tab).correlation
+        whole_tau = kendalltau_modified(gen_tab, comp_tab).correlation
+
         whole_kendall[comp] = whole_tau 
 
     granulated_kendalls = {}
@@ -144,8 +155,8 @@ def granulated_kendall_from_json(json_path: str,
                                           for i, hyp in enumerate(other_hyperparameters)])]
 
                 if len(gen_tab) > 2:
-                    ktau = kendalltau(gen_tab, complexity_tab)
-                    kendall += ktau.correlation / m
+                    ktau = kendalltau_modified(gen_tab, complexity_tab)
+                    kendall += ktau / m
                 else:
                     kendall += 0.
                     logger.warning("Hyperparameter found with only one finished experiment!")

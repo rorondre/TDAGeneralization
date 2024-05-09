@@ -526,7 +526,7 @@ def main(
             assert softmax_train.ndim == 2, softmax_train.shape
             assert softmax_train.shape[0] == outputs_train.shape[0], (softmax_train.shape, outputs_train.shape[0])
             assert softmax_train.shape[1] == n_classes, (softmax_train.shape, n_classes)
-            probability_train = softmax_train[torch.arange(outputs_train.shape[0]), train_y]
+            probability_train = softmax_train[torch.arange(outputs_train.shape[0]), eval_y]
 
             # Turn collected iterates (both weights and losses) into numpy arrays
             if compute_euclidean_dimension:

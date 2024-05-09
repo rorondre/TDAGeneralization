@@ -129,8 +129,6 @@ def main(
     plt.ylabel("Relative variation (%)")
     plt.xlabel("Proportion of the data (%)")
 
-    plt.set_ylim(None, 30.)
-
     # Saving the figure
     output_path = results_path.parent / "figures" / f"batch_experiment{stem}.png"
     if not output_path.parent.is_dir():
