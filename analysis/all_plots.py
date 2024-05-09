@@ -20,9 +20,9 @@ from analysis.plot_from_json import plot_from_dict
 from analysis.curvature import curvature
 
 # list of other functions to use
-FUNCTIONS = [positive_magnitude, E_alpha]
+FUNCTIONS = [curvature]
 
-T_MAGNITUDE = np.sqrt(50000)
+T_MAGNITUDE = 10. * np.sqrt(50000)
 
 
 def compute_all_quantities_one_seed(
@@ -35,11 +35,11 @@ def compute_all_quantities_one_seed(
         min_points: int = 200,
         max_points: int = None,
         jump: int = 200,
-        t_min: float = 1.,
+        t_min: float = 0.01,
         t_max: float = T_MAGNITUDE,
         n_points_curvature: int = 20,
         save_plots: bool=True,
-        generalization_key: str = "worst_probability_gap",
+        generalization_key: str = "worst_gen",
         n: int=50000,
         pseudo_matrix_data_proportion: float = 0.1,
         pseudo_distance_type: str = "manhattan",
@@ -136,7 +136,9 @@ def compute_all_quantities_one_seed(
                         min_points=min_points,
                         max_points=max_points,
                         t=t,
-                        jump=jump
+                        jump=jump,
+                        t_min=t_min,
+                        t_max=t_max
                     )
                     new_results[seed][key].update({
                         "alpha": alpha,

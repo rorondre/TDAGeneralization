@@ -9,7 +9,7 @@ from matplotlib.pyplot import rc
 from tqdm import tqdm
 
 from analysis.plot_E_alpha import E_alpha
-from analysis.plot_magnitude_simple import magnitude
+from analysis.plot_magnitude_simple import magnitude, positive_magnitude
 
 # rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
 # rc('text', usetex=True)
@@ -71,10 +71,17 @@ def main(
             dist_matrix = dist_matrix / np.sqrt(int(pp * n))
 
         # E_alpha
-        E_alphas.append(E_alpha(dist_matrix, alpha=alpha))
+        E_alpha_comp = E_alpha(dist_matrix, alpha=alpha)
+        E_alphas.append(E_alpha_comp)
 
         # magnitude
-        magnitudes.append(magnitude(dist_matrix, t=np.sqrt(n)))
+        magnitude_comp = positive_magnitude(dist_matrix, t=np.sqrt(n))
+        magnitudes.append(magnitude_comp)
+
+        # Writing the new JSON file
+        results_seed[key]["E_alpha"] = E_alpha_comp
+        results_seed[key]["positive_magnitude"] = magnitude_comp
+
 
     # Sorting everything
     pseudo_proportions = np.array(pseudo_proportions)
@@ -106,7 +113,7 @@ def main(
         100. * pseudo_proportions,
         100. * (magnitudes - magnitude_reference) / magnitude_reference,
         color = "k",
-        label = r"$\mathrm{Mag}(\sqrt{n}\mathcal{W})$",
+        label = r"$\mathrm{PMag}(\sqrt{n}\mathcal{W})$",
         width = 3.
     )
     plt.grid()
@@ -122,6 +129,11 @@ def main(
     plt.savefig(str(output_path))
 
     plt.close()
+
+    # Saving the new JSON file
+    with open(str(results_path), "r") as new_json_file:
+        json.dump(results, new_json_file)
+    logger.info(f"Saved the new JSON file in {str(results_path)}")
 
 if __name__ == "__main__":
     fire.Fire(main)

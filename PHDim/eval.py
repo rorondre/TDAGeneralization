@@ -76,7 +76,7 @@ def eval(eval_loader, net, criterion, opt, eval: bool = False):
         total_acc += float(prec) * bs
 
         losses.append(losses_unreduced)
-        outputs.append(out.flatten())
+        outputs.append(out) # we do not flatten it anymore
 
     hist = [
         total_loss / total_size,
@@ -86,6 +86,6 @@ def eval(eval_loader, net, criterion, opt, eval: bool = False):
     # losses: list of tensors of shape (batch_size)
     # We concatenate it into a tensor of shape (len(eval_loader))
     losses = torch.cat(losses)
-    outputs = torch.cat(outputs)
+    outputs = torch.cat(outputs, 0)
 
     return hist, losses, outputs

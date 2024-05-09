@@ -493,7 +493,8 @@ def main(
                         assert softmax_test.shape[1] == n_classes, (softmax_test.shape, n_classes)
                         probability_test = softmax_test[torch.arange(out.shape[0]), test_y]
 
-                        worst_probability_gap.append(probability_history[-1].mean().item() - probability_test.mean().item())
+                        # WARNING this is now just storing the test probability loss
+                        worst_probability_gap.append(probability_test.mean().item())
                         worst_case_acc.append(te_hist[1].item())
                         logger.info(f"Test accuracy at iteration {i}: {te_hist[1]}")
                     
@@ -515,10 +516,17 @@ def main(
             # Some logging
             with torch.no_grad():
                 te_hist, *_ = eval(test_loader_eval, net, crit_unreduced, opt)
-                tr_hist, *_ = eval(train_loader_eval, net, crit_unreduced, opt)
+                tr_hist, _, outputs_train = eval(train_loader_eval, net, crit_unreduced, opt)
 
             evaluation_history_TEST.append([i + 1, *te_hist])
             evaluation_history_TRAIN.append([i + 1, *tr_hist])
+
+            # Evaluation of the probability loss of the last iteration
+            softmax_train = torch.softmax(outputs_train, dim=1)
+            assert softmax_train.ndim == 2, softmax_train.shape
+            assert softmax_train.shape[0] == outputs_train.shape[0], (softmax_train.shape, outputs_train.shape[0])
+            assert softmax_train.shape[1] == n_classes, (softmax_train.shape, n_classes)
+            probability_train = softmax_train[torch.arange(outputs_train.shape[0]), train_y]
 
             # Turn collected iterates (both weights and losses) into numpy arrays
             if compute_euclidean_dimension:
@@ -554,7 +562,7 @@ def main(
             if worst_case_gen_freq is not None:
                 worst_gen = min(worst_case_acc)
                 worst_accuracy_gap = max(worst_accuracy_gap)
-                worst_probability_gap = 100. * max(worst_probability_gap)
+                worst_probability_gap = 100. * (probability_train.mean().item() - min(worst_probability_gap))
             else:
                 worst_gen = "non_computed"
                 worst_probability_gap = "non_computed"
