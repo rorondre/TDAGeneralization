@@ -79,8 +79,8 @@ def main(
         magnitudes.append(magnitude_comp)
 
         # Writing the new JSON file
-        results_seed[key]["E_alpha"] = E_alpha_comp
-        results_seed[key]["positive_magnitude"] = magnitude_comp
+        results_seed[key]["E_alpha"] = float(E_alpha_comp)
+        results_seed[key]["positive_magnitude"] = float(magnitude_comp)
 
 
     # Sorting everything
@@ -132,7 +132,7 @@ def main(
 
     # Saving the new JSON file
     with open(str(results_path), "r") as new_json_file:
-        json.dump(results, new_json_file)
+        json.dump(results, new_json_file, indent=2)
     logger.info(f"Saved the new JSON file in {str(results_path)}")
 
 if __name__ == "__main__":
