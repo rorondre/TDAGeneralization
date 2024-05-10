@@ -15,6 +15,9 @@ from tqdm import tqdm
 matplotlib.rcParams.update(matplotlib.rcParamsDefault)
 plt.style.use("ggplot")
 
+font = {'weight' : 'bold'}
+matplotlib.rc('font', **font)
+
 
 
 # Master psi plot
@@ -148,6 +151,13 @@ def psi_plot(coeffs: dict=COEFFS, save_dir: str=str(SAVE_DIR)):
     # plt.plot([0,1])
     # ax.patch.set_facecolor('gray')
     # ax.patch.set_alpha(0.2)
+
+    # Create a Rectangle patch
+    rect = matplotlib.patches.Rectangle([0.2, 0.2], 0.85, 0.85, \
+                            linewidth=1, edgecolor='r', facecolor='none', linestyle="--")
+
+    # Add the patch to the Axes
+    ax.add_patch(rect)
 
     save_path = Path(save_dir) / "psi_plot.png"
     if not save_path.parent.is_dir():

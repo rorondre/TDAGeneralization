@@ -10,6 +10,12 @@ from matplotlib import rc
 
 MARKERS = ["o", "^", "s", "+", "D", "v", "*", "p"]
 
+plt.style.use("_classic_test_patch")
+# plt.style.use("ggplot")
+
+font = {'weight' : 'bold'}
+matplotlib.rc('font', **font)
+
 # rc('font', **{'family': 'sans-serif', 'sans-s/erif': ['Helvetica']})
 # for Palatino and other serif fonts use:
 # rc('font',**{'family':'serif','serif':['Palatino']})
@@ -31,7 +37,7 @@ def plot_from_dict(results: dict,
 
     logger.info(f"Found {len(experiments)} converged experiments")
 
-    color_map = plt.cm.get_cmap("viridis")
+    color_map = plt.cm.get_cmap("viridis_r")
 
     all_bs = list(set([results[k]["batch_size"] for k in experiments]))
 
@@ -50,21 +56,22 @@ def plot_from_dict(results: dict,
             c=np.array(lr_tab),
             marker=MARKERS[b_idx],
             label=str(b),
-            cmap=color_map
+            cmap=color_map,
+            norm=matplotlib.colors.LogNorm()
         )
 
     if yscale == "log":
         plt.yscale("log")
 
-    plt.xlabel("Generalization gap", loc="right")
-    plt.ylabel(ylabel)
+    plt.xlabel("Generalization gap", loc="right", fontweight="bold")
+    plt.ylabel(ylabel, fontweight="bold")
 
     if colorbar:
         cbar = plt.colorbar(sc)
-        cbar.set_label(r"Learning rate")
+        cbar.set_label("Learning rate", fontweight="bold")
 
     plt.grid(visible=True, which="both")
-    plt.legend()
+    plt.legend(title="Batch size")
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     logger.info(f"Saving figure in {str(output_path)}")

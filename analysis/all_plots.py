@@ -20,7 +20,7 @@ from analysis.plot_from_json import plot_from_dict
 from analysis.curvature import curvature
 
 # list of other functions to use
-FUNCTIONS = [magnitude]
+FUNCTIONS = [magnitude, positive_magnitude, ph_dim, E_alpha]
 
 T_MAGNITUDE = np.sqrt(50000)
 
