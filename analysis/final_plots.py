@@ -136,7 +136,7 @@ def psi_plot(coeffs: dict=COEFFS, save_dir: str=str(SAVE_DIR)):
 
     ax.grid(True)
 
-    leg1 = ax.legend(loc="lower left", title = "Model dataset")
+    leg1 = ax.legend(loc="lower left", title = "Model - dataset")
 
     patchList = []
     for key in COLORS_KEYS:
