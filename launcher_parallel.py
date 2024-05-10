@@ -227,7 +227,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default="vit")
     parser.add_argument('--depth', type=int, default=4) # Only for FCN
     parser.add_argument('--width', type=int, default=100) # Only for FCN
-    parser.add_argument('--optim', type=str, default="Adam") # Optimizer
+    parser.add_argument('--optim', type=str, default="RMSprop") # Optimizer
     parser.add_argument('--min_points', type=int, default=200) # Not used anymore
     parser.add_argument('--save_weights', type=int, default=0) # whether to save the weights
     parser.add_argument('--compute_dimensions', type=int, default=1) # Always use 1, if 0 no distance matrices are computed
