@@ -27,7 +27,8 @@ COLORS = ["b", "orange", "g", "r", "k"]
 
 COLORS_KEYS = {
     r"$E_1$": "b",
-    r"$\mathrm{Mag}$": "orange",
+    r"$\mathrm{Mag}(\sqrt{n})$": "orange",
+    r"$\mathrm{Mag}(\sqrt{n})$": "r",
     r"$\mathrm{dim}_{\mathrm{PH}}$": "g"
 }
 
@@ -35,47 +36,130 @@ COLORS_KEYS = {
 SAVE_DIR = Path("figures") 
 
 # Convention is (bs, lr)
-COEFFS = {
+COEFFS_01 = {
+    "ViT - CIFAR10": {
+        r"$E_1$": [0.66, 0.95],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.64, 0.89],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.29, 0.94]
+    },
+    "ViT - CIFAR100": {
+        r"$E_1$": [-0.30, 0.88],
+        r"$\mathrm{Mag}(\sqrt{n})$": [-0.16, 0.77],
+        # r"$\mathrm{dim}_{\mathrm{PH}}$": [0.29, 0.99]
+    },
+    "CaiT - CIFAR10": {
+        r"$E_1$": [0.77, 0.97],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.74, 0.95],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.51, 0.93]
+    },
+    "CaiT - CIFAR100": {
+        r"$E_1$": [-0.35, 0.98],
+        r"$\mathrm{Mag}(\sqrt{n})$": [-0.35, 0.94],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [0.23, 0.95]
+    },
+    "Swin - CIFAR10": {
+        r"$E_1$": [0.58, 0.97],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.58, 0.97],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.23, 0.93]
+    }
+    # "GatedGCN - MNIST": {
+    #     r"$E_1$": [0.93, 0.42],
+    #     r"$\mathrm{Mag}(\sqrt{n})$": [0.93, 0.70],
+    #     r"$\mathrm{dim}_{\mathrm{PH}}$": [0.14, -0.14]
+    # },
+    # "GraphSage - MNIST": {
+    #     r"$E_1$": [0.76, 0.52],
+    #     r"$\mathrm{Mag}(\sqrt{n})$": [0.76, 0.54],
+    #     r"$\mathrm{dim}_{\mathrm{PH}}$": [0.02, 0.01]
+    # }
+}
+
+# Convention is (bs, lr)
+COEFFS_EUCLIDEAN = {
     "ViT - CIFAR10": {
         r"$E_1$": [0.69, 1.0],
-        r"$\mathrm{Mag}$": [0.62, 0.53],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.62, 0.53],
         r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.6, 1.0]
     },
     "ViT - CIFAR100": {
         r"$E_1$": [-0.66, 1.0],
-        r"$\mathrm{Mag}$": [0.42, 0.28],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.42, 0.28],
         r"$\mathrm{dim}_{\mathrm{PH}}$": [0.29, 0.99]
     },
     "CaiT - CIFAR10": {
         r"$E_1$": [0.78, 0.98],
-        r"$\mathrm{Mag}$": [0.78, 0.88],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.78, 0.88],
         r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.08, 0.99]
     },
     "CaiT - CIFAR100": {
         r"$E_1$": [-0.32, 0.83],
-        r"$\mathrm{Mag}$": [-0.32, 0.63],
+        r"$\mathrm{Mag}(\sqrt{n})$": [-0.32, 0.63],
         r"$\mathrm{dim}_{\mathrm{PH}}$": [0.31, 0.99]
     },
     "Swin - CIFAR10": {
         r"$E_1$": [0.58, 0.97],
-        r"$\mathrm{Mag}$": [0.57, 0.97],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.57, 0.97],
         r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.57, 0.97]
     },
     "GatedGCN - MNIST": {
         r"$E_1$": [0.93, 0.42],
-        r"$\mathrm{Mag}$": [0.93, 0.70],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.93, 0.70],
         r"$\mathrm{dim}_{\mathrm{PH}}$": [0.14, -0.14]
     },
     "GraphSage - MNIST": {
         r"$E_1$": [0.76, 0.52],
-        r"$\mathrm{Mag}$": [0.76, 0.54],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.76, 0.54],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [0.02, 0.01]
+    }
+}
+
+# Convention is (bs, lr)
+COEFFS_L1 = {
+    "ViT - CIFAR10": {
+        r"$E_1$": [0.69, 1.0],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.62, 0.53],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.6, 1.0]
+    },
+    "ViT - CIFAR100": {
+        r"$E_1$": [-0.66, 1.0],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.42, 0.28],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [0.29, 0.99]
+    },
+    "CaiT - CIFAR10": {
+        r"$E_1$": [0.78, 0.98],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.78, 0.88],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.08, 0.99]
+    },
+    "CaiT - CIFAR100": {
+        r"$E_1$": [-0.32, 0.83],
+        r"$\mathrm{Mag}(\sqrt{n})$": [-0.32, 0.63],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [0.31, 0.99]
+    },
+    "Swin - CIFAR10": {
+        r"$E_1$": [0.58, 0.97],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.57, 0.97],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.37, 0.99]
+    },
+    "Swin - CIFAR100": {
+        r"$E_1$": [0.41, 0.84],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.41, 0.80],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.57, 0.97]
+    },
+    "GatedGCN - MNIST": {
+        r"$E_1$": [0.93, 0.42],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.93, 0.70],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [0.14, -0.14]
+    },
+    "GraphSage - MNIST": {
+        r"$E_1$": [0.76, 0.52],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.76, 0.54],
         r"$\mathrm{dim}_{\mathrm{PH}}$": [0.02, 0.01]
     }
 }
 
 
 
-def psi_plot(coeffs: dict=COEFFS, save_dir: str=str(SAVE_DIR)):
+def psi_plot(coeffs: dict=COEFFS_01, save_dir: str=str(SAVE_DIR)):
 
     keys = list(coeffs.keys())
 
@@ -109,7 +193,7 @@ def psi_plot(coeffs: dict=COEFFS, save_dir: str=str(SAVE_DIR)):
             # r = np.random.uniform()
             # j = 1 if r > 0.5 else -1
 
-            # if comp == r"$\mathrm{Mag}$":
+            # if comp == r"$\mathrm{Mag}(\sqrt{n})$":
             #     ax.annotate(comp, xy=coeffs[model_data][comp], xytext=(-c,-c), 
             #             textcoords='offset points', ha='center', va='bottom',
             #             bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.3),
@@ -159,7 +243,7 @@ def psi_plot(coeffs: dict=COEFFS, save_dir: str=str(SAVE_DIR)):
     # Add the patch to the Axes
     ax.add_patch(rect)
 
-    save_path = Path(save_dir) / "psi_plot.png"
+    save_path = Path(save_dir) / "psi_plot_01.png"
     if not save_path.parent.is_dir():
         save_path.parent.mkdir(exist_ok=True, parents=True)
 

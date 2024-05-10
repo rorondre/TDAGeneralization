@@ -12,6 +12,12 @@ from tqdm import tqdm
 from analysis.plot_magnitude_simple import magnitude, positive_magnitude
 
 
+plt.style.use("ggplot")
+
+font = {'weight' : 'bold'}
+matplotlib.rc('font', **font)
+
+
 def main(
     results_path: str,
     n: int = 50000,
@@ -90,8 +96,8 @@ def main(
         )
         plt.xscale("log")
         plt.yscale("log")
-        plt.ylabel(r"$\mathrm{PMag}(\sqrt{n}\mathcal{W})$")
-        plt.xlabel(r"$\mathrm{Mag}(\sqrt{n}\mathcal{W})$")
+        plt.ylabel(r"$\mathrm{PMag}(\sqrt{n}\mathcal{W})$", fontweight = "bold")
+        plt.xlabel(r"$\mathrm{Mag}(\sqrt{n}\mathcal{W})$", fontweight = "bold")
 
         plt.grid(visible=True, which="both")
             
@@ -112,18 +118,16 @@ def main(
 # HACK This is a bit hacky for now, to be improved
 def several_plots(
     results: List[str] = [
-        "final_results/2024-04-08_09_51_31/all_results.json",
-        "final_results/2024-04-18_17_22_36/all_results.json",
-        "final_results/2024-04-29_22_30_35/all_results.json"
+        "final_results/2024-05-07_14_57_13/all_results.json",
+        "final_results/2024-05-07_14_57_13/all_results.json"
     ],
-    distance_types: List[int] = [0, 2, 1],
+    distance_types: List[int] = [0, 1],
     labels = [
         r"Euclidean distance",
-        r"$\ell^2$ pseudometric",
         r"$\ell^1$ pseudometric"
     ],
     colors = ["blue", "orange", "green"],
-    stems = ["_euclidean", "", ""]
+    stems = ["_euclidean", ""]
     ):
 
     assert len(results) == len(distance_types)
@@ -155,8 +159,8 @@ def several_plots(
     )
     plt.xscale("log")
     plt.yscale("log")
-    plt.ylabel(r"$\mathrm{PMag}(\sqrt{n}\mathcal{W})$")
-    plt.xlabel(r"$\mathrm{Mag}(\sqrt{n}\mathcal{W})$")
+    plt.ylabel(r"$\mathrm{PMag}(\sqrt{n})$", fontweight="bold")
+    plt.xlabel(r"$\mathrm{Mag}(\sqrt{n})$", fontweight="bold")
 
     plt.legend()
 

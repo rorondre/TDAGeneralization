@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import fire
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from loguru import logger
@@ -13,6 +14,11 @@ from analysis.plot_magnitude_simple import magnitude, positive_magnitude
 
 # rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
 # rc('text', usetex=True)
+
+plt.style.use("ggplot")
+
+font = {'weight' : 'bold'}
+matplotlib.rc('font', **font)
 
 class UnmergedExperiment(BaseException):
     pass
@@ -121,13 +127,13 @@ def main(
         100. * pseudo_proportions,
         100. * (magnitudes - magnitude_reference) / magnitude_reference,
         color = "orange",
-        label = r"$\mathrm{PMag}(\sqrt{n}\mathcal{W})$",
+        label = r"$\mathrm{PMag}(\sqrt{n})$",
         width = 3.
     )
-    plt.grid()
+    plt.grid(True)
     plt.legend()
-    plt.ylabel("Relative variation (%)")
-    plt.xlabel("Proportion of the data (%)")
+    plt.ylabel("Relative variation (%)", fontweight="bold")
+    plt.xlabel("Proportion of the data (%)", fontweight="bold")
 
     # Saving the figure
     output_path = results_path.parent / "figures" / f"batch_experiment{stem}.png"

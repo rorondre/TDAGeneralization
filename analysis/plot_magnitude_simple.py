@@ -67,6 +67,31 @@ def positive_magnitude(dist_matrix: np.ndarray, t: float = 35., **kwargs) -> flo
 
     return np.maximum(magnitude_weights, np.zeros(len(magnitude_weights))).sum()
 
+
+def magnitude_small(dist_matrix: np.ndarray, t_small: float = 0.01, **kwargs) -> float:
+
+    # from the PhD thesis of Salim, Shilan (2021)
+    N=dist_matrix.shape[0]
+    w = np.ones(N)/N
+    linear_system = LinearSystem(np.exp(-t_small * dist_matrix), np.ones(N), self_adjoint = True, positive_definite = True)
+    w = Cg(linear_system,  x0 = w).xk
+    magnitude_weights = w.squeeze()
+
+    return magnitude_weights.sum()
+
+def positive_magnitude_small(dist_matrix: np.ndarray, t_small: float = 0.01, **kwargs) -> float:
+
+    # from the PhD thesis of Salim, Shilan (2021)
+    N=dist_matrix.shape[0]
+    w = np.ones(N)/N
+    linear_system = LinearSystem(np.exp(-t_small * dist_matrix), np.ones(N), self_adjoint = True, positive_definite = True)
+    w = Cg(linear_system,  x0 = w).xk
+    magnitude_weights = w.squeeze()
+
+    return np.maximum(magnitude_weights, np.zeros(len(magnitude_weights))).sum()
+
+
+
 def magnitude_chaining(dist_matrix: np.ndarray,\
                         t_min: float = 0.01, 
                         t_max: float = 1.,
