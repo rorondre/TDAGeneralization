@@ -17,7 +17,7 @@ python -m pip install -r requirements.txt
 
 We provide some pytests to assess that the installation went well>
 ````
-pytest -x -vv
+pip install pytest && pytest -x -vv
 ````
 All tests should pass.
 
