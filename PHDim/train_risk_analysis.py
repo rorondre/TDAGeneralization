@@ -62,7 +62,7 @@ def main(
          save_weights_file: str = None,
          save_distance_matrix_file: str = None,
          compute_dimensions: bool = True,
-          weight_file: str = 'weights/checkpoint_95_3.pth',
+         weight_file: str = 'weights/checkpoint_95_3.pth',
          ripser_points: int = 500,
          jump: int = 20,
          additional_dimensions: bool = False,
