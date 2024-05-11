@@ -27,13 +27,48 @@ COLORS = ["b", "orange", "g", "r", "k"]
 
 COLORS_KEYS = {
     r"$E_1$": "b",
-    r"$\mathrm{Mag}(\sqrt{n})$": "orange",
+    r"$\mathrm{PMag}(\sqrt{n})$": "orange",
     r"$\mathrm{Mag}(\sqrt{n})$": "r",
     r"$\mathrm{dim}_{\mathrm{PH}}$": "g"
 }
 
 # SAVE_DIR = Path("figures") / str(datetime.datetime.now()).replace(" ", "_").replace(":", "_").split(".")[0]
 SAVE_DIR = Path("figures") 
+
+
+# Convention is (bs, lr)
+OPTIMIZERS = {
+    r"SGD-$\rho_S$": {
+        r"$E_1$": [0.76, 0.69],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.71, 0.08],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [0.40, 0.69]
+    },
+    r"SGD-Eucl.": {
+        r"$E_1$": [0.72, 0.69],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.76, 0.62],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.49, -0.24]
+    },
+    r"ADAM-$\rho_S$": {
+        r"$E_1$": [0.69, 1.0],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.62, 0.53],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.60, 1.0]
+    },
+    r"ADAM-Eucl.": {
+        r"$E_1$": [-0.29, 1.],
+        r"$\mathrm{Mag}(\sqrt{n})$": [1.0, -0.50],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.38, 1.0]
+    },
+    r"RMSprop-$\rho_S$": {
+        r"$E_1$": [0.38, 0.91],
+        r"$\mathrm{Mag}(\sqrt{n})$": [0.20, 0.51],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.20, 0.87]
+    },
+    r"RMSprop-Eucl.": {
+        r"$E_1$": [-0.47, 0.91],
+        r"$\mathrm{Mag}(\sqrt{n})$": [-0.48, 0.91],
+        r"$\mathrm{dim}_{\mathrm{PH}}$": [-0.44, 0.47]
+    }
+}
 
 # Convention is (bs, lr)
 COEFFS_01 = {
@@ -159,7 +194,7 @@ COEFFS_L1 = {
 
 
 
-def psi_plot(coeffs: dict=COEFFS_01, save_dir: str=str(SAVE_DIR)):
+def psi_plot(coeffs: dict=OPTIMIZERS, save_dir: str=str(SAVE_DIR)):
 
     keys = list(coeffs.keys())
 
@@ -220,7 +255,7 @@ def psi_plot(coeffs: dict=COEFFS_01, save_dir: str=str(SAVE_DIR)):
 
     ax.grid(True)
 
-    leg1 = ax.legend(loc="lower left", title = "Model - dataset")
+    leg1 = ax.legend(loc="lower left", title = "Optimizer - metric")
 
     patchList = []
     for key in COLORS_KEYS:
@@ -243,7 +278,7 @@ def psi_plot(coeffs: dict=COEFFS_01, save_dir: str=str(SAVE_DIR)):
     # Add the patch to the Axes
     ax.add_patch(rect)
 
-    save_path = Path(save_dir) / "psi_plot_01.png"
+    save_path = Path(save_dir) / "psi_plot_optimizers.png"
     if not save_path.parent.is_dir():
         save_path.parent.mkdir(exist_ok=True, parents=True)
 
