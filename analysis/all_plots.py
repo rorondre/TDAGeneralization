@@ -13,14 +13,12 @@ from tqdm import tqdm
 from analysis.plot_ph_dim import ph_dim
 from analysis.plot_E_alpha import E_alpha
 from analysis.plot_magnitude_simple import magnitude, positive_magnitude, magnitude_small, positive_magnitude_small
-from analysis.plot_magnitude_simple import magnitude_integral
 from analysis.kendall import granulated_kendall_from_dict
 from analysis.pearson import granulated_pearson_from_dict
 from analysis.plot_from_json import plot_from_dict
-from analysis.curvature import curvature
 
 # list of other functions to use
-FUNCTIONS = [curvature]
+FUNCTIONS = [E_alpha, magnitude]
 
 T_MAGNITUDE = np.sqrt(50000)
 

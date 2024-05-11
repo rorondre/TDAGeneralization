@@ -17,7 +17,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_0.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_0.pth",
       "E_alpha": 0.00022363662719726562,
-      "magnitude": 0.0
+      "magnitude": 1.0
     },
     "1": {
       "train_acc": 3.125,
@@ -36,7 +36,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_2.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_2.pth",
       "E_alpha": 0.00047588348388671875,
-      "magnitude": 0.0
+      "magnitude": 1.0
     },
     "2": {
       "train_acc": 9.375,
@@ -55,7 +55,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_1.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_1.pth",
       "E_alpha": 0.010314702987670898,
-      "magnitude": 0.0
+      "magnitude": 1.0000295942712365
     },
     "3": {
       "train_acc": 9.375,
@@ -74,7 +74,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_3.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_3.pth",
       "E_alpha": 0.021999120712280273,
-      "magnitude": 0.0
+      "magnitude": 1.0000760902698884
     }
   },
   "85082": {
@@ -95,7 +95,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_4.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_4.pth",
       "E_alpha": 0.0003027915954589844,
-      "magnitude": 0.0
+      "magnitude": 1.0
     },
     "1": {
       "train_acc": 1.8867924213409424,
@@ -114,7 +114,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_6.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_6.pth",
       "E_alpha": 0.00037026405334472656,
-      "magnitude": 0.0
+      "magnitude": 1.0
     },
     "2": {
       "train_acc": 9.433961868286133,
@@ -133,7 +133,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_5.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_5.pth",
       "E_alpha": 0.03090834617614746,
-      "magnitude": 0.0
+      "magnitude": 1.0001059442753624
     },
     "3": {
       "train_acc": 9.433961868286133,
@@ -152,7 +152,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_7.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_7.pth",
       "E_alpha": 0.039913177490234375,
-      "magnitude": 0.0
+      "magnitude": 1.0001391327840832
     }
   }
 }

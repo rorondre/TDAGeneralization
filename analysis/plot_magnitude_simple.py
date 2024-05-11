@@ -91,7 +91,7 @@ def plot_magnitude_one_seed(seed_results: dict, ax, output_dir: str=None, t: flo
         else:
             dist_matrix = np.load(str(dist_matrix_path)) 
 
-        complexity = magnitude_chaining(dist_matrix)
+        complexity = magnitude(dist_matrix)
         logger.info(f"Complexity: {complexity}") 
 
         magnitude_tab.append(complexity)
