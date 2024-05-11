@@ -1,5 +1,4 @@
 import json
-import multiprocessing
 from pathlib import Path
 
 import fire
@@ -13,62 +12,6 @@ from gph.python import ripser_parallel
 from analysis.plot_E_alpha import E_alpha
 from analysis.kendall import granulated_kendall_from_dict
 from analysis.pearson import granulated_pearson_from_dict
-
-def ph_dim_multiprocessing(dist_matrix: np.ndarray,
-           min_points=1,
-           max_points=None,
-           point_jump=50,
-           h_dim=0,
-           seed: int = 42,
-           alpha: float = 1.,
-           **kwargs) -> float:
-    """
-    This function:
-     - takes as an input a distance matrix
-     - use it to compute PH dim
-
-    :param dm: distance matrix, should be of shape (N, N)
-    """
-    assert dist_matrix.ndim == 2, dist_matrix
-    assert dist_matrix.shape[0] == dist_matrix.shape[1], dist_matrix.shape
-
-    np.random.seed(seed)
-
-    if max_points is None:
-        max_points = dist_matrix.shape[0]
-    assert max_points <= dist_matrix.shape[0], (max_points, dist_matrix.shape[0])
-
-    test_n = range(min_points, max_points, point_jump)
-    lengths = []
-
-    # creating the sample indices
-    indices_list = []
-    for points_number in test_n:
-        sample_indices = np.random.choice(dist_matrix.shape[0], points_number, replace=False)
-        indices_list.append(sample_indices)
-
-    pool = multiprocessing.Pool(10)
-    def f(s):
-        dist_matrix_temp = dist_matrix[s, :][:, s]
-        alpha_sum = E_alpha(dist_matrix_temp, h_dim=0, alpha=alpha)
-
-    lengths = pool.map(f, indices_list)
-
-    # compute our ph dim by running a linear least squares
-    x = np.log(np.array(list(test_n)))
-    y = np.log(lengths)
-    N = len(x)
-    m = (N * (x * y).sum() - x.sum() * y.sum()) / (N * (x ** 2).sum() - x.sum() ** 2)
-    b = y.mean() - m * x.mean()
-
-    error = ((y - (m * x + b)) ** 2).mean()
-
-    logger.debug(f"ph Dimension Calculation has an approximate error of: {error}.")
-
-    return alpha / (1 - m)
-
-
-
 
 
 def ph_dim(dist_matrix: np.ndarray,

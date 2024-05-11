@@ -22,7 +22,7 @@ from analysis.curvature import curvature
 # list of other functions to use
 FUNCTIONS = [curvature]
 
-T_MAGNITUDE = 10. * np.sqrt(50000)
+T_MAGNITUDE = np.sqrt(50000)
 
 
 def compute_all_quantities_one_seed(
@@ -63,9 +63,6 @@ def compute_all_quantities_one_seed(
     # HACK: change it
     logger.warning(f"For now only the first random seed is used")
     seed = list(results.keys())[0]
-
-    # number of datapoints, useful to renormalize some distance matrices
-    # n = results[seed][]
 
     complexity_names = []
 

@@ -114,8 +114,6 @@ def main(
     else:
         return magnitudes, positive_magnitudes
 
-
-# HACK This is a bit hacky for now, to be improved
 def several_plots(
     results: List[str] = [
         "final_results/2024-05-07_14_57_13/all_results.json",

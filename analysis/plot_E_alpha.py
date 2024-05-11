@@ -12,6 +12,7 @@ from gph.python import ripser_parallel
 from analysis.kendall import granulated_kendall_from_dict
 
 
+# This function is the definition of E_alpha
 def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 1., **kwargs) -> float:
 
     diagrams = ripser_parallel(dist_matrix, maxdim=0, n_threads=5, metric="precomputed")['dgms']
@@ -36,9 +37,7 @@ def plot_E_alpha_one_seed(seed_results: dict, ax, output_dir: str=None, alpha: f
 
     for key in tqdm(seed_results.keys()):
 
-        # acc_gap_tab.append(seed_results[key]['acc_gap'])
         if 'worst_acc' in seed_results[key].keys():
-            # acc_gap_tab.append(seed_results[key]['loss_gap'])
             acc_gap_tab.append(seed_results[key]['train_acc'] - seed_results[key]['worst_acc'])
         else:
             acc_gap_tab.append(seed_results[key]['acc_gap'])

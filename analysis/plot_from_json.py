@@ -11,15 +11,10 @@ from matplotlib import rc
 MARKERS = ["o", "^", "s", "+", "D", "v", "*", "p"]
 
 plt.style.use("_classic_test_patch")
-# plt.style.use("ggplot")
 
 font = {'weight' : 'bold'}
 matplotlib.rc('font', **font)
 
-# rc('font', **{'family': 'sans-serif', 'sans-s/erif': ['Helvetica']})
-# for Palatino and other serif fonts use:
-# rc('font',**{'family':'serif','serif':['Palatino']})
-# rc('text', usetex=True)
 
 def plot_from_dict(results: dict,
                     output_path: str,

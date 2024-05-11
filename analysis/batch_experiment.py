@@ -12,9 +12,6 @@ from tqdm import tqdm
 from analysis.plot_E_alpha import E_alpha
 from analysis.plot_magnitude_simple import magnitude, positive_magnitude
 
-# rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
-# rc('text', usetex=True)
-
 plt.style.use("ggplot")
 
 font = {'weight' : 'bold'}
