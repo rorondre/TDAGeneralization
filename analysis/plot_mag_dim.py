@@ -56,7 +56,6 @@ def magnitude_individual(dist_matrix: np.ndarray, t: float = 1.) -> float:
     magnitude_weights = w.squeeze()
     return magnitude_weights.sum()
 
-# Stupid function in place of the real one that Rayna is implementing
 def mag_dim(dist_matrix: np.ndarray,
            initial_interval: float = 0.,
            end_interval: float = 1.,

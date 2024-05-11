@@ -19,7 +19,7 @@ class AnalysisOptions(BaseModel):
     """
 
     iterations: int = 1 # Maximum authorized number of iterations
-    log_weights: bool = True  # Whether we want to save final weights of the experiment
+    log_weights: bool = False  # Whether we want to save final weights of the experiment
     log_distance_matrix: bool = True # Whether we want to save the distance matrix from each experiment
     batch_size_eval: int = 5000  # batch size used for evaluation
     lrmin: float = 0.005  # minimum learning rate in teh experiment
@@ -29,30 +29,30 @@ class AnalysisOptions(BaseModel):
     eval_freq: int = 3000  # at which frequency we evaluate the model (training and validation sets)
     dataset: str = "cifar10"  # dataset we use
     data_path: str = "~/data/"  # where to find the data
-    model: str = "vit"  # model, currently supported: ["fc", "alexnet", "vgg", "lenet", "vit"]
+    model: str = "vit"  # model
     save_folder: str = "./results"  # Where to save the results
     depth: int = 5  # depth of the network (for FCNN)
     width: int = 200  # width of the network (for FCNN)
-    optim: str = "SGD"  # Optimizer
+    optim: str = "Adam"  # Optimizer
     min_points: int = 1000  # minimum number of points used to compute the PH dimension
-    # num_exp_lr: int = 6  # Number of batch sizes we use
-    # num_exp_bs: int = 6  # Number of learning rates we use
-    num_exp_lr: int = 3  # Number of batch sizes we use
-    num_exp_bs: int = 3  # Number of learning rates we use
+    num_exp_lr: int = 6  # Number of batch sizes we use
+    num_exp_bs: int = 6  # Number of learning rates we use
     compute_dimensions: bool = True  # whether or not we compute the PH dimensions
     project_name: str = "ph_and_magnitude"  # project name for WANDB logging
-    # initial_weights: str = None  # Initial weights if they exist, always none in our work
-    initial_weights: Optional[str] = None  # Initial weights if they exist, always none in our work
+    initial_weights: Optional[str] = None  # Initial weights if they exists
     # ripser_points: int = 5000  # Maximum number of points used to compute the PH dimension
     ripser_points: int = 10  # Maximum number of points used to compute the PH dimension
     seed: int = 1234  # seed
-    jump: int = 20  # number of finite sets drawn to compute the PH dimension, see https://arxiv.org/abs/2111.13171v1
-    additional_dimensions: bool = False  # whether or not compute the ph dimensions used in the robustness experiment
-    # data_proportion: float = 1. # Proportion of data to use (between 0 and 1), used for pytests
+    jump: int = 20  # number of finite sets drawn to compute the PH dimension, not used at the moment
+    additional_dimensions: bool = True  
     data_proportion: float = 1. # Proportion of data to use (between 0 and 1), used for pytests
     JL_projection: float = 0.05 # Proportion of data to use (between 0 and 1), used for pytests
     compute_euclidean_dimension: bool = True
     worst_case_gen_freq: int = 1
+    compute_activation_dimension: bool = True
+    additional_identifier: str = ""
+    pseudo_metric_type: str = "manhattan"
+    pseudo_matrix_data_proportion: float = 0.1 # Proportion of the data that is used to estimate the pseudo distance matrices
 
     def __call__(self):
 
@@ -136,8 +136,16 @@ class AnalysisOptions(BaseModel):
                     jump=self.jump,
                     additional_dimensions=self.additional_dimensions,
                     data_proportion=self.data_proportion,
+                    proportion_eval=0, # This argument is not used anymore
+                    id_lr=0,
+                    pseudo_matrix_data_proportion=self.pseudo_matrix_data_proportion,
+                    freeze=False,
+                    compute_euclidean_dimension=True,
                     JL_projection=self.JL_projection,
-                    worst_case_gen_freq=self.worst_case_gen_freq
+                    worst_case_gen_freq=self.worst_case_gen_freq,
+                    compute_activation_dimension=self.compute_activation_dimension,
+                    additional_identifier=self.additional_identifier,
+                    pseudo_metric_type=self.pseudo_metric_type
                 )
 
                 experiment_results[exp_num] = exp_dict

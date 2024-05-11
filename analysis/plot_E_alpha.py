@@ -12,7 +12,6 @@ from gph.python import ripser_parallel
 from analysis.kendall import granulated_kendall_from_dict
 
 
-# Stupid function in place of the real one that Rayna is implementing
 def E_alpha(dist_matrix: np.ndarray, h_dim=0, alpha: float = 1., **kwargs) -> float:
 
     diagrams = ripser_parallel(dist_matrix, maxdim=0, n_threads=5, metric="precomputed")['dgms']

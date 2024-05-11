@@ -62,13 +62,7 @@ def main(
          save_weights_file: str = None,
          save_distance_matrix_file: str = None,
          compute_dimensions: bool = True,
-         # weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_could_be_it.pth',
-          weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/vit_cifar100_check.pth',
-         # weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/swin_cifar10_properly_pretrained.pth',
-         # weight_file: str = None,
-         #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_swin_cifar100_check.pth',
-
-        #weight_file: str = 'C:/Users/Rayna/PycharmProjects/measure_data_dependent_dimensions/PHDim/save_finetuned/best_weights/checkpoint_epoch_unknown_cait.pth',
+          weight_file: str = 'weights/checkpoint_95_3.pth',
          ripser_points: int = 500,
          jump: int = 20,
          additional_dimensions: bool = False,
@@ -92,7 +86,6 @@ def main(
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     logger.info(f"on device {str(device)}")
     logger.info(f"Random seed ('torch.manual_seed'): {seed}")
-    print('The seed is ', seed)
     torch.manual_seed(seed)
 
     # training setup
@@ -104,7 +97,6 @@ def main(
                                                          batch_size_train,
                                                          batch_size_eval,
                                                          subset=data_proportion)
-    # HACK! TODO change it
     n_classes = num_classes
 
     # Number of datapoints
@@ -247,7 +239,6 @@ def main(
     print(net)
     n_parameters = sum(p.numel() for p in net.parameters() if p.requires_grad)
     logger.info(f"Number of params: {n_parameters}")
-    print(n_parameters)
 
     if weight_file is not None:
         logger.info(f"Loading weights from {str(weight_file)}")
@@ -298,8 +289,6 @@ def main(
 
         net = net.head.to(device)
 
-    logger.info("Network: ")
-    print(net)
     n_parameters = sum(p.numel() for p in net.parameters() if p.requires_grad)
     logger.info(f"Number of params: {n_parameters}")
 
@@ -439,10 +428,6 @@ def main(
 
                 with torch.no_grad():
 
-                    # it fails at this line:
-                    # clear cache
-                    # torch.cuda.empty_cache()
-
                     tr_hist, losses, out, losses_01 = eval_on_tensors(eval_x[:pseudo_matrix_data_number,...],\
                                                         eval_y[:pseudo_matrix_data_number,...], 
                                                         net, 
@@ -497,10 +482,6 @@ def main(
                         worst_probability_gap.append(probability_test.mean().item())
                         worst_case_acc.append(te_hist[1].item())
                         logger.info(f"Test accuracy at iteration {i}: {te_hist[1]}")
-                    
-
-        # clear cache
-        # torch.cuda.empty_cache()
 
         if (len(loss_history) >= ripser_points) and compute_dimensions:
             STOP = True
@@ -553,9 +534,7 @@ def main(
             if compute_activation_dimension:
                 probability_history_np = torch.stack(tuple(probability_history)).cpu().numpy()
                 distance_matrix_probability = pairwise_distances(probability_history_np, metric=metric)
-                # softmax_history_np = torch.stack(tuple(softmax_history)).cpu().numpy()
-                # distance_matrix_softmax = pairwise_distances(softmax_history_np, metric=metric)
-
+                
             test_acc = evaluation_history_TEST[-1][2]
             train_acc = evaluation_history_TRAIN[-1][2]
 
@@ -619,12 +598,6 @@ def main(
                     np.save(str(probability_dm_file), distance_matrix_probability)
                     exp_dict["saved_distance_matrix_probability"] = str(probability_dm_file)
 
-                    # Softmax ditance matrix
-                    # softmax_dm_file = (Path(save_distance_matrix_file).parent / \
-                    #                     (Path(save_distance_matrix_file).stem + "_softmax")).with_suffix(".npy")
-                    # logger.info(f"Saving softmax distance matrix in {str(save_distance_matrix_file)} ✅")
-                    # np.save(str(softmax_dm_file), distance_matrix_softmax)
-                    # exp_dict["saved_distance_matrix_softmax"] = str(softmax_dm_file)
                 else:
                     exp_dict["saved_distance_matrix_softmax"] = "non_computed"
                     exp_dict["saved_distance_matrix_probability"] = "non_computed"

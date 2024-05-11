@@ -71,7 +71,6 @@ def ph_dim_multiprocessing(dist_matrix: np.ndarray,
 
 
 
-# Stupid function in place of the real one that Rayna is implementing
 def ph_dim(dist_matrix: np.ndarray,
            min_points=1,
            max_points=None,
