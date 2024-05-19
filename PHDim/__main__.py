@@ -18,7 +18,7 @@ class AnalysisOptions(BaseModel):
     All hyperparameters of the experiement are defined here
     """
 
-    iterations: int = 1 # Maximum authorized number of iterations
+    iterations: int = 1 # Number of iterations before convergence (denoted tau in the paper)
     log_weights: bool = False  # Whether we want to save final weights of the experiment
     log_distance_matrix: bool = True # Whether we want to save the distance matrix from each experiment
     batch_size_eval: int = 5000  # batch size used for evaluation
@@ -34,35 +34,38 @@ class AnalysisOptions(BaseModel):
     depth: int = 5  # depth of the network (for FCNN)
     width: int = 200  # width of the network (for FCNN)
     optim: str = "Adam"  # Optimizer
-    min_points: int = 1000  # minimum number of points used to compute the PH dimension
+    min_points: int = 2  # minimum number of points used to compute the PH dimension
     num_exp_lr: int = 6  # Number of batch sizes we use
     num_exp_bs: int = 6  # Number of learning rates we use
     compute_dimensions: bool = True  # whether or not we compute the PH dimensions
     project_name: str = "ph_and_magnitude"  # project name for WANDB logging
-    initial_weights: Optional[str] = None  # Initial weights if they exists
+    initial_weights: Optional[str] = None  # Initial weights path if possible
     # ripser_points: int = 5000  # Maximum number of points used to compute the PH dimension
-    ripser_points: int = 10  # Maximum number of points used to compute the PH dimension
+    ripser_points: int = 5000  # Maximum number of points used to compute the PH dimension
     seed: int = 1234  # seed
     jump: int = 20  # number of finite sets drawn to compute the PH dimension, not used at the moment
     additional_dimensions: bool = True  
     data_proportion: float = 1. # Proportion of data to use (between 0 and 1), used for pytests
     JL_projection: float = 0.05 # Proportion of data to use (between 0 and 1), used for pytests
     compute_euclidean_dimension: bool = True
-    worst_case_gen_freq: int = 1
+    worst_case_gen_freq: int = 1 # period of evaluation of the test accuracy
     compute_activation_dimension: bool = True
     additional_identifier: str = ""
-    pseudo_metric_type: str = "manhattan"
+    pseudo_metric_type: str = "manhattan" # Which type of data-dependent pseudo_distance to use
     pseudo_matrix_data_proportion: float = 0.1 # Proportion of the data that is used to estimate the pseudo distance matrices
 
     def __call__(self):
 
         save_folder = Path(self.save_folder)
 
-        exp_folder = save_folder / str(datetime.datetime.now()).replace(" ", "_").replace(":", "_")
-        exp_folder.mkdir(parents=True, exist_ok=True)
+        exp_folder_temp = save_folder / str(datetime.datetime.now()).replace(" ", "_").replace(":", "_").split(".")[0]
+        exp_folder_temp.mkdir(parents=True, exist_ok=True)
 
-        log_file = exp_folder / "parameters.log.json"
+        log_file = exp_folder_temp / "parameters.log.json"
         log_file.touch()
+
+        exp_folder = exp_folder_temp / "results"
+        exp_folder.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"Saving log file in {log_file}")
         with open(log_file, "w") as log:
@@ -74,7 +77,7 @@ class AnalysisOptions(BaseModel):
         else:
             weights_dir = None
 
-        if self.log_weights:
+        if self.log_distance_matrix:
             dist_matrix_dir = exp_folder / "distance_matrices"
             dist_matrix_dir.mkdir(parents=True, exist_ok=True)
         else:

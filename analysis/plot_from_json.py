@@ -71,6 +71,8 @@ def plot_from_dict(results: dict,
     plt.grid(visible=True, which="both")
     plt.legend(title="Batch size")
 
+    plt.tight_layout()
+
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     logger.info(f"Saving figure in {str(output_path)}")
     plt.savefig(str(output_path))

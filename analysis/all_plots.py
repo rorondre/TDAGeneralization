@@ -28,7 +28,7 @@ def compute_all_quantities_one_seed(
         alpha: float = 1.,
         t: float = T_MAGNITUDE,
         stems: List[str] = [
-            "_01"
+            ""
         ],
         min_points: int = 200,
         max_points: int = None,
@@ -169,24 +169,6 @@ def compute_all_quantities_one_seed(
     with open(str(kendall_path), "w") as json_file:
         json.dump(granulated_kendalls, json_file, indent=2)
 
-    # Pearson coefficients 
-    granulated_pearsons = granulated_pearson_from_dict(
-        new_results[seed],
-        generalization_key = generalization_key,
-        complexity_keys = complexity_names
-    )
-
-    # We check if old granulated pearsons already exist
-    pearson_path = json_path.parent / "granulated_pearsons.json"
-    if pearson_path.exists():
-        with open(str(pearson_path), "r") as old_pearson_file:
-            old_pearsons = json.load(old_pearson_file)
-        old_pearsons["granulated pearsons"].update(granulated_pearsons["granulated pearsons"])
-        old_pearsons["pearson tau"].update(granulated_pearsons["pearson tau"])
-        old_pearsons["generalization_key"] = generalization_key
-        granulated_pearsons = old_pearsons.copy()
-    with open(str(pearson_path), "w") as json_file:
-        json.dump(granulated_pearsons, json_file, indent=2)
     
     # Saving the new results file
     # in a new one to avoid overwriting
