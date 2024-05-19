@@ -12,8 +12,11 @@ MARKERS = ["o", "^", "s", "+", "D", "v", "*", "p"]
 
 plt.style.use("_classic_test_patch")
 
-font = {'weight' : 'bold'}
+font = {'weight' : 'bold',
+        'size'   : 14}
+
 matplotlib.rc('font', **font)
+
 
 
 def plot_from_dict(results: dict,
