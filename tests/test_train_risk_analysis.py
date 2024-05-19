@@ -85,7 +85,7 @@ def test_train_risk_analysis():
         exp_folder = Path(exp_folder)
         assert exp_folder.is_dir(), str(exp_folder)
 
-        log_file = exp_folder / "parameters.log.json"
+        log_file = exp_folder.parent / "parameters.log.json"
         result_file = exp_folder / "results_1.json"
 
         # Test hyperparameters logging
