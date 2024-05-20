@@ -52,3 +52,5 @@ phenv/
 cython_constraint.txt
 
 *.gz
+
+results_example/distance_matrix
