@@ -15,7 +15,7 @@ from analysis.pearson import granulated_pearson_from_dict
 
 
 def ph_dim(dist_matrix: np.ndarray,
-           min_points=1,
+           min_points=200,
            max_points=None,
            point_jump=200,
            h_dim=0,
