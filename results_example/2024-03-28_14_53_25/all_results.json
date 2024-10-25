@@ -74,7 +74,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/248921/distance_matrices/dist_matrix_3.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/248921/weights/weights_3.pth",
       "E_alpha": 0.021999120712280273,
-      "magnitude": 1.0000760902698884
+      "magnitude": 1.000076090269887
     }
   },
   "85082": {
@@ -133,7 +133,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_5.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_5.pth",
       "E_alpha": 0.03090834617614746,
-      "magnitude": 1.0001059442753624
+      "magnitude": 1.0001059442753626
     },
     "3": {
       "train_acc": 9.433961868286133,
@@ -152,7 +152,7 @@
       "saved_distance_matrix": "results_example/2024-03-28_14_53_25/85082/distance_matrices/dist_matrix_7.npy",
       "saved_weights": "results_example/2024-03-28_14_53_25/85082/weights/weights_7.pth",
       "E_alpha": 0.039913177490234375,
-      "magnitude": 1.0001391327840832
+      "magnitude": 1.0001391327840845
     }
   }
 }

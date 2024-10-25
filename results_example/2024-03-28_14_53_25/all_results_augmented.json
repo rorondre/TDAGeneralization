@@ -75,7 +75,7 @@
       "jump": 200,
       "t": 223.60679774997897,
       "E_alpha_dist_matrix": 2.062940666291979e-06,
-      "magnitude_dist_matrix": 1.0002303433332003,
+      "magnitude_dist_matrix": 1.0002303433395416,
       "magnitude_integral_dist_matrix": 0.02351055542598853
     },
     "3": {
@@ -101,7 +101,7 @@
       "jump": 200,
       "t": 223.60679774997897,
       "E_alpha_dist_matrix": 4.3998243199894205e-06,
-      "magnitude_dist_matrix": 1.0004900734371938,
+      "magnitude_dist_matrix": 1.0004900734373852,
       "magnitude_integral_dist_matrix": 0.0384240724665809
     }
   },
