@@ -54,3 +54,5 @@ cython_constraint.txt
 *.gz
 
 results_example/distance_matrix
+.DS_Store
+distance_matrices_for*
